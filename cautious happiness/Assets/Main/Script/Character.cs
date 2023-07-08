@@ -1,70 +1,126 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using UnityEngine;
+using Vector2 = UnityEngine.Vector2;
+using Vector3 = UnityEngine.Vector3;
 
 public class Character : MonoBehaviour
 {
-    public List<Transform> _walkLines;
+    
+
+    public RoomManager _roomManager;
+
+    public float _speed = 1f;
+
+
+    public List<Vector2> WalkLinePath { get; set; }
 
     float _t = 0;
 
+    public void Start()
+    {
+        WalkLinePath = RecalibratePath();
+    }
+
     public void Update()
     {
-        if (Input.GetKeyDown(KeyCode.A))
+        if (Input.GetKey(KeyCode.A))
         {
-            _t += 0.1f;
+            _t -= _speed * Time.deltaTime;
         }
 
-        transform.position = MoveCharacter(_t, _walkLines);
+        else if (Input.GetKey(KeyCode.D))
+        {
+            _t += _speed * Time.deltaTime;
+        }
+
+        if (_t >= 1)
+        {
+            float excess = _t - 1;
+            _t = excess;
+        }
+
+        if (_t < 0)
+        {
+            _t = 1 - _t;
+        }
+
+        transform.position = MoveCharacter(_t);
     }
 
-    public Vector3 MoveCharacter(float t, List<Transform> walkLines)
+    public Vector3 MoveCharacter(float t)
     {
-        if (Math.Abs(t - 4) < 0.001f)
+        Vector2 interpolated = Interpolate(WalkLinePath, t);
+
+        return new Vector3(interpolated.x, 0, interpolated.y);
+    }
+
+    public static Vector2 Interpolate(List<Vector2> path, float t)
+    {
+        if (path.Count < 3)
         {
-            t = 0;
+            return path[0];
         }
 
-        float totalDistance = 0;
+        float totalDistance = GetTotalDistance(path);
+        float targetDistance = totalDistance * Mathf.Clamp01(t);
 
-        for (int i = 0; i < walkLines.Count; i++)
+        float currentDistance = 0f;
+        for (int i = 0; i < path.Count - 1; i++)
         {
-            Transform startTransform = walkLines[i];
-            Transform endTransform = walkLines[i % (walkLines.Count-1)];
+            Vector2 currentPoint = path[i];
+            Vector2 nextPoint = path[i + 1];
+            float segmentDistance = Vector2.Distance(currentPoint, nextPoint);
 
-            totalDistance += (endTransform.position - startTransform.position).magnitude;
-        }
-
-        float goalDist = totalDistance * t;
-
-        float accumilatedDistance = 0;
-
-        for (int i = 0; i < walkLines.Count; i++)
-        {
-            Transform startTransform = walkLines[i];
-            Transform endTransform = walkLines[i % (walkLines.Count - 1)];
-
-            float sectionDistance = (endTransform.position - startTransform.position).magnitude;
-
-            accumilatedDistance += sectionDistance;
-
-            if (accumilatedDistance >= goalDist)
+            if (currentDistance + segmentDistance >= targetDistance)
             {
-                float startDistance = accumilatedDistance - sectionDistance;
-
-                float TBetween = Mathf.InverseLerp(startDistance, accumilatedDistance, goalDist);
-
-                return startTransform.position + (endTransform.position - startTransform.position) * TBetween;
-                
+                float remainingDistance = targetDistance - currentDistance;
+                float segmentT = remainingDistance / segmentDistance;
+                return Vector2.Lerp(currentPoint, nextPoint, segmentT);
             }
+
+            currentDistance += segmentDistance;
         }
 
-        return Vector3.zero;
+        throw new Exception("Failed to interpolate path. Invalid t value.");
     }
 
-
-    public float DistanceToTValue()
+    static float GetTotalDistance(List<Vector2> path)
     {
-        return -1;
+        float totalDistance = 0f;
+        for (int i = 0; i < path.Count - 1; i++)
+        {
+            totalDistance += Vector2.Distance(path[i], path[i + 1]);
+        }
+        return totalDistance;
+    }
+
+    List<Vector2> RecalibratePath()
+    {
+        List<Vector2> newWalkLinePath = new();
+
+        // Create new Walkline at my current position
+        Vector2 currentPositionWalkLine = new Vector2(transform.position.x, transform.position.z);
+        newWalkLinePath.Add(currentPositionWalkLine);
+
+        // Calculate the order of walklines based on schedule and avaliable rooms
+        // Currenttime is always t=0 ??? -> Even though its not in "scheduletime" t=0?
+        // -> kinda shit. Maybe make a new path
+
+        foreach (Room room in _roomManager.ActiveRooms)
+        {
+            if (Vector2.Distance(room.WalkPoint, currentPositionWalkLine) < 0.01f)
+            {
+                continue;
+            }
+
+            newWalkLinePath.Add(room.WalkPoint);
+        }
+
+        newWalkLinePath.Add(currentPositionWalkLine);
+
+        return newWalkLinePath;
     }
 }
