@@ -773,6 +773,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4209126036814947092}
   - component: {fileID: 980488611524456042}
+  - component: {fileID: -4512006458086478030}
   m_Layer: 0
   m_Name: Living Room
   m_TagString: Untagged
@@ -821,6 +822,27 @@ MonoBehaviour:
   _connectionTransforms:
   - {fileID: 1439397750442002110}
   - {fileID: 372576315023060549}
+--- !u!65 &-4512006458086478030
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7461408967619238690}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2, y: 1, z: 3}
+  m_Center: {x: 0.5, y: 0, z: 0}
 --- !u!1 &7552646414917627609
 GameObject:
   m_ObjectHideFlags: 0

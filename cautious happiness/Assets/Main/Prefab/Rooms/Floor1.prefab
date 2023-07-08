@@ -635,6 +635,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4209126036814947092}
   - component: {fileID: 980488611524456042}
+  - component: {fileID: 7357108150709494328}
   m_Layer: 0
   m_Name: Floor1
   m_TagString: Untagged
@@ -675,10 +676,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 73fe6ea15935cb641aa0f4056843aefc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _roomType: 0
   _walkPointTransform: {fileID: 4575767752109245889}
   _connectionTransforms:
   - {fileID: 1439397750442002110}
   - {fileID: 7855561125613106098}
+--- !u!65 &7357108150709494328
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7461408967619238690}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 3}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &8072746424811001956
 GameObject:
   m_ObjectHideFlags: 0

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
 using Random = System.Random;
@@ -16,6 +17,8 @@ public class RoomManager : MonoBehaviour
     public Room[] _roomPrefabs;
     public List<Room> ActiveRooms { get; set; } = new();
 
+    int _nrCount = 0;
+
     public void Start()
     {
         InitializeNewRoom(null, RoomType.FLOOR2);
@@ -25,28 +28,55 @@ public class RoomManager : MonoBehaviour
     {
         if (!Input.GetKeyDown(KeyCode.W)) return;
 
-        // hänge an den bestehenden Raum nen neuen Raum an
-        RoomConnection usedConnection = FindConnection();
-
-        InitializeNewRoom(usedConnection, RoomType.FLOOR2);
+        CreateRoomSequence();
 
         _character.RecalibratePath();
     }
 
-    public RoomConnection FindConnection()
+    public bool TestNoCollisions(RoomType type, RoomConnection newRoomConnection)
+    {
+        foreach (Vector2 spotCheck in Room.GetSpotChecksPerType(type))
+        {
+            Vector3 spotCheck3D = new Vector3(spotCheck.x, 0, spotCheck.y);
+
+            foreach (Room room in ActiveRooms)
+            {
+                if (room.Collider.bounds.Contains(newRoomConnection.Room.transform.position + newRoomConnection.Room.transform.rotation * spotCheck3D))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public RoomConnection CreateRoomSequence()
     {
         RoomConnection foundConnection = null;
         int breakOut = 0;
+        RoomType type = RoomType.FLOOR2;
 
-        while (foundConnection == null && breakOut < 10000)
+        while (breakOut <= 10000)
         {
+            breakOut++;
             // find random room
             Room roomToAddTo = FindRoomToAddTo();
 
             // find random connection
             foundConnection = FindConnectionForRoom(roomToAddTo);
 
-            breakOut++;
+            if (foundConnection == null)
+            {
+                continue;
+            }
+
+            bool notCollided = InitializeNewRoom(foundConnection, type);
+
+            if (notCollided)
+            {
+                break;
+            }
         }
 
         if (breakOut >= 10000)
@@ -129,9 +159,11 @@ public class RoomManager : MonoBehaviour
         return _roomPrefabs[(int)type];
     }
 
-    public void InitializeNewRoom(RoomConnection existingConnection, RoomType type)
+    public bool InitializeNewRoom(RoomConnection existingConnection, RoomType type)
     {
         Room newRoom = Instantiate(GetRoomPrefabFromType(type), Vector3.zero, Quaternion.identity);
+        newRoom.gameObject.name = _nrCount.ToString();
+        _nrCount++;
         newRoom.InstantiateConnections();
 
         // room drehen, sodass eine der Connections in die richtige Richtung zeigt.
@@ -146,7 +178,12 @@ public class RoomManager : MonoBehaviour
 
             RotateNewRoom(newRoomConnection, existingConnection.Room);
 
-            
+            // test ob die Kollision verursachen würde
+            if (!TestNoCollisions(type, newRoomConnection))
+            {
+                Destroy(newRoom.gameObject);
+                return false;
+            }
 
             // in beide Richtungen verbinden! -> vorher auch feststellen mit welcher existingConnection ich den raum verbinden will.
             newRoomConnection.ConnectingRoom = existingConnection.Room;
@@ -154,6 +191,7 @@ public class RoomManager : MonoBehaviour
         }
 
         AddRoom(newRoom);
+        return true;
     }
 
     void RotateNewRoom(RoomConnection newRoomConnection, Room existingRoom)
@@ -164,8 +202,7 @@ public class RoomManager : MonoBehaviour
         // In Richtung drehen damit's eine passende Connection wird!
         Vector2 forward2D = existingRoom.WalkPoint - newRoomConnection.Room.WalkPoint;
         Vector3 forward3D = new Vector3(forward2D.x, 0, forward2D.y);
-        Debug.Log(forward3D);
- 
+
         Quaternion lookTowardsRotation = Quaternion.LookRotation(forward3D, Vector3.up);
         float angle = Vector2.SignedAngle(Vector2.up, toConnection);
 
