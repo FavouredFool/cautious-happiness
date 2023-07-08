@@ -712,6 +712,10 @@ MonoBehaviour:
   - {fileID: 1439397750442002110}
   - {fileID: 7855561125613106098}
   - {fileID: 5072805254147474157}
+  _meshRenderer:
+  - {fileID: 3194000850446346169}
+  - {fileID: 6648275282557385988}
+  - {fileID: 9203319426966091433}
 --- !u!65 &7357108150709494328
 BoxCollider:
   m_ObjectHideFlags: 0

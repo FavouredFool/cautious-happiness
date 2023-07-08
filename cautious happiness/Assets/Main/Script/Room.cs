@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Serialization;
+using AmazingAssets.AdvancedDissolve;
 using static RoomManager;
 
 public class Room : MonoBehaviour
@@ -11,6 +13,8 @@ public class Room : MonoBehaviour
     public Transform _walkPointTransform;
 
     public List<Transform> _connectionTransforms;
+
+    public MeshRenderer[] _meshRenderer;
 
     public List<RoomConnection> RoomConnections { get; set; } = new();
 
@@ -90,6 +94,15 @@ public class Room : MonoBehaviour
             {
                 connection.ConnectingRoom = null;
             }
+        }
+    }
+
+    public async Task Disintegrate()
+    {
+        foreach (MeshRenderer meshRenderer in _meshRenderer)
+        {
+            Material mat = meshRenderer.material;
+            AdvancedDissolveKeyworlds.
         }
     }
 

@@ -359,6 +359,9 @@ MonoBehaviour:
   _walkPointTransform: {fileID: 4575767752109245889}
   _connectionTransforms:
   - {fileID: 1439397750442002110}
+  _meshRenderer:
+  - {fileID: 3194000850446346169}
+  - {fileID: 3464103100241095811}
 --- !u!65 &5930528399209385496
 BoxCollider:
   m_ObjectHideFlags: 0

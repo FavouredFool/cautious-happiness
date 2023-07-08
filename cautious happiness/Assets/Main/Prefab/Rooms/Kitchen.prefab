@@ -606,6 +606,10 @@ MonoBehaviour:
   _connectionTransforms:
   - {fileID: 1439397750442002110}
   - {fileID: 3658519482802566920}
+  _meshRenderer:
+  - {fileID: 3194000850446346169}
+  - {fileID: 1670799629054394723}
+  - {fileID: 1527057067492657420}
 --- !u!65 &6419124729750285280
 BoxCollider:
   m_ObjectHideFlags: 0

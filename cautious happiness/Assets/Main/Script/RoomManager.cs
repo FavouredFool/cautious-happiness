@@ -35,7 +35,7 @@ public class RoomManager : MonoBehaviour
         throw new Exception("room of type missing");
     }
 
-    public void DestroyRoom()
+    public async void DestroyRoom()
     {
         Room roomToDestroy = null;
         Room currentRoom = _character.LatestRoom;
@@ -87,7 +87,8 @@ public class RoomManager : MonoBehaviour
             }
             
         }
-
+        
+        await roomToDestroy.Disintegrate();
         ActiveRooms.Remove(roomToDestroy);
         Destroy(roomToDestroy.gameObject);
     }
