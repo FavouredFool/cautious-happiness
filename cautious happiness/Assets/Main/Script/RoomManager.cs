@@ -28,39 +28,36 @@ public class RoomManager : MonoBehaviour
     {
         if (!Input.GetKeyDown(KeyCode.W)) return;
 
+
+
         CreateRoomSequence();
 
         _character.RecalibratePath();
     }
 
-    public bool TestNoCollisions(RoomType type, RoomConnection newRoomConnection)
+    public RoomType DetermineType()
     {
-        foreach (Vector2 spotCheck in Room.GetSpotChecksPerType(type))
-        {
-            Vector3 spotCheck3D = new Vector3(spotCheck.x, 0, spotCheck.y);
-
-            foreach (Room room in ActiveRooms)
-            {
-                if (room.Collider.bounds.Contains(newRoomConnection.Room.transform.position + newRoomConnection.Room.transform.rotation * spotCheck3D))
-                {
-                    return false;
-                }
-            }
-        }
-
-        return true;
+        // Random, aber jeder Type darf nur ein mal vorhanden sein
+        Array values = Enum.GetValues(typeof(RoomType));
+        Random random = new Random();
+        RoomType type = (RoomType)values.GetValue(random.Next(values.Length));
+        Debug.Log(type);
+        return type;
     }
 
     public RoomConnection CreateRoomSequence()
     {
         RoomConnection foundConnection = null;
         int breakOut = 0;
-        RoomType type = RoomType.FLOOR2;
+
+        
 
         while (breakOut <= 10000)
         {
             breakOut++;
-            // find random room
+
+            RoomType type = DetermineType();
+
             Room roomToAddTo = FindRoomToAddTo();
 
             // find random connection
@@ -135,6 +132,25 @@ public class RoomManager : MonoBehaviour
 
         // kann besetzt werden
         return usedConnection;
+    }
+
+
+    public bool TestNoCollisions(RoomType type, RoomConnection newRoomConnection)
+    {
+        foreach (Vector2 spotCheck in Room.GetSpotChecksPerType(type))
+        {
+            Vector3 spotCheck3D = new Vector3(spotCheck.x, 0, spotCheck.y);
+
+            foreach (Room room in ActiveRooms)
+            {
+                if (room.Collider.bounds.Contains(newRoomConnection.Room.transform.position + newRoomConnection.Room.transform.rotation * spotCheck3D))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     public void PlaceRoomFromConnection(RoomConnection existingConnection, RoomConnection newConnection)
