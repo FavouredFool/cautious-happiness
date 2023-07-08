@@ -82,4 +82,15 @@ public class Room : MonoBehaviour
         return spotChecks;
     }
 
+    public void RemoveFromConnections(Room roomToDisconnect)
+    {
+        foreach (RoomConnection connection in RoomConnections)
+        {
+            if (connection.ConnectingRoom == roomToDisconnect)
+            {
+                connection.ConnectingRoom = null;
+            }
+        }
+    }
+
 }

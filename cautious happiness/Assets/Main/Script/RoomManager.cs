@@ -18,21 +18,68 @@ public class RoomManager : MonoBehaviour
     public List<Room> ActiveRooms { get; set; } = new();
 
     int _nrCount = 0;
-    
-    public void Start()
-    {
-        InitializeNewRoom(null, RoomType.FLOOR2);
-
-        _character.RecalibratePath();
-    }
 
     public void Update()
     {
         if (!Input.GetKeyDown(KeyCode.W)) return;
 
+        CreateRoom();
+    }
+
+    public void CreateRoom()
+    {
         CreateRoomSequence();
 
         _character.RecalibratePath();
+    }
+
+
+    public void DestroyRoom()
+    {
+        Room roomToDestroy = null;
+        Room startRoom = _character.CalculateStartRoom();
+
+        int failSave = 0; 
+        while (failSave <= 10000)
+        {
+            failSave++;
+            roomToDestroy = ActiveRooms[UnityEngine.Random.Range(0, ActiveRooms.Count)];
+
+            if (roomToDestroy == startRoom) continue;
+
+            int amountOfNonNullConnections = 0;
+
+            foreach (RoomConnection connection in roomToDestroy.RoomConnections)
+            {
+                if (connection.ConnectingRoom == null) continue;
+
+                amountOfNonNullConnections++;
+            }
+
+            if (amountOfNonNullConnections > 1) continue;
+
+            break;
+
+        }
+
+        if (failSave >= 10000)
+        {
+            throw new Exception("escaped endless loop");
+        }
+
+        // Kill dependencies
+        foreach (RoomConnection connections in roomToDestroy.RoomConnections)
+        {
+            if (connections.ConnectingRoom != null)
+            {
+                connections.ConnectingRoom.RemoveFromConnections(roomToDestroy);
+                connections.ConnectingRoom = null;
+            }
+            
+        }
+
+        ActiveRooms.Remove(roomToDestroy);
+        Destroy(roomToDestroy.gameObject);
     }
 
     public RoomType DetermineType()
@@ -48,7 +95,9 @@ public class RoomManager : MonoBehaviour
 
         if (allTypes.Count == 0)
         {
-            throw new Exception("All types have been used up");
+            Debug.Log("All types have been used up");
+            List<RoomType> fullList = EnumToList<RoomType>();
+            return fullList[UnityEngine.Random.Range(0, fullList.Count)];
         }
 
         RoomType randomType = allTypes[UnityEngine.Random.Range(0, allTypes.Count)];
@@ -74,8 +123,6 @@ public class RoomManager : MonoBehaviour
     {
         RoomConnection foundConnection = null;
         int breakOut = 0;
-
-        
 
         while (breakOut <= 10000)
         {

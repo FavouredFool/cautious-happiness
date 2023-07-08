@@ -127,6 +127,7 @@ public class Character : MonoBehaviour
         foreach (Room room in allRooms)
         {
             List<Vector2> waypointsWalkTowardsRoom = _roomManager.WalkTowardsRoom(room, activeRoom, null);
+
             newWalkLinePath.AddRange(waypointsWalkTowardsRoom);
 
             activeRoom = room;
@@ -147,7 +148,6 @@ public class Character : MonoBehaviour
 
         foreach (Room room in _roomManager.ActiveRooms)
         {
-
             float distanceToPlayer = Vector2.Distance(new Vector2(transform.position.x,transform.position.z), room.WalkPoint);
 
             if (minDistance > distanceToPlayer)
