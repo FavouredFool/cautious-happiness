@@ -18,7 +18,7 @@ public class RoomManager : MonoBehaviour
 
     public void Start()
     {
-        InitializeNewRoom(Vector2.zero, null, RoomType.FLOOR1);
+        InitializeNewRoom(null, RoomType.FLOOR2);
     }
 
     public void Update()
@@ -28,7 +28,7 @@ public class RoomManager : MonoBehaviour
         // hänge an den bestehenden Raum nen neuen Raum an
         RoomConnection usedConnection = FindConnection();
 
-        InitializeNewRoom(GetRoomPlacementFromConnection(usedConnection), usedConnection, RoomType.FLOOR1);
+        InitializeNewRoom(usedConnection, RoomType.FLOOR2);
 
         _character.RecalibratePath();
     }
@@ -107,10 +107,21 @@ public class RoomManager : MonoBehaviour
         return usedConnection;
     }
 
-    public Vector2 GetRoomPlacementFromConnection(RoomConnection existingConnection)
+    public void PlaceRoomFromConnection(RoomConnection existingConnection, RoomConnection newConnection)
     {
         // wir nutzen bisher nur 1x1 Räume
-        return existingConnection.Room.WalkPoint + (existingConnection.GetConnectionPosition() - existingConnection.Room.WalkPoint) * 2;
+
+        float spacesFromStart = (int) Vector2.Distance(existingConnection.GetConnectionPosition(), existingConnection.Room.WalkPoint);
+        float spacesFromEnd = (int)Vector2.Distance(newConnection.GetConnectionPosition(), newConnection.Room.WalkPoint);
+
+        float totalSpaces = spacesFromStart + spacesFromEnd + 1;
+
+        Vector2 startPosition = existingConnection.Room.WalkPoint;
+        Vector2 direction = (existingConnection.GetConnectionPosition() - existingConnection.Room.WalkPoint).normalized;
+
+        Vector2 end = startPosition + direction * totalSpaces;
+
+        newConnection.Room.transform.position = new Vector3(end.x, 0, end.y);
     }
 
     public Room GetRoomPrefabFromType(RoomType type)
@@ -118,10 +129,11 @@ public class RoomManager : MonoBehaviour
         return _roomPrefabs[(int)type];
     }
 
-    public void InitializeNewRoom(Vector2 position, RoomConnection existingConnection, RoomType type)
+    public void InitializeNewRoom(RoomConnection existingConnection, RoomType type)
     {
-        Room newRoom = Instantiate(GetRoomPrefabFromType(type), new Vector3(position.x, 0, position.y), Quaternion.identity);
+        Room newRoom = Instantiate(GetRoomPrefabFromType(type), Vector3.zero, Quaternion.identity);
         newRoom.InstantiateConnections();
+
         // room drehen, sodass eine der Connections in die richtige Richtung zeigt.
         // 1. Connection auswählen
 
@@ -129,12 +141,12 @@ public class RoomManager : MonoBehaviour
         {
             RoomConnection newRoomConnection = newRoom.RoomConnections[UnityEngine.Random.Range(0, newRoom.RoomConnections.Count)];
 
+            // Place in room
+            PlaceRoomFromConnection(existingConnection, newRoomConnection);
+
             RotateNewRoom(newRoomConnection, existingConnection.Room);
 
-            if (existingConnection.ConnectingRoom != null)
-            {
-                throw new Exception("There's already a room here");
-            }
+            
 
             // in beide Richtungen verbinden! -> vorher auch feststellen mit welcher existingConnection ich den raum verbinden will.
             newRoomConnection.ConnectingRoom = existingConnection.Room;
@@ -152,10 +164,10 @@ public class RoomManager : MonoBehaviour
         // In Richtung drehen damit's eine passende Connection wird!
         Vector2 forward2D = existingRoom.WalkPoint - newRoomConnection.Room.WalkPoint;
         Vector3 forward3D = new Vector3(forward2D.x, 0, forward2D.y);
+        Debug.Log(forward3D);
  
         Quaternion lookTowardsRotation = Quaternion.LookRotation(forward3D, Vector3.up);
         float angle = Vector2.SignedAngle(Vector2.up, toConnection);
-        Debug.Log(angle);
 
         Quaternion rotateForRoomRotation = Quaternion.Euler(0, angle, 0);
 
