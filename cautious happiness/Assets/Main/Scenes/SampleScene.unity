@@ -585,6 +585,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3257585296360693633, guid: d03e1c93e0acc5c4f95dd54573b36dff,
         type: 3}
+      propertyPath: _scheduleManager
+      value: 
+      objectReference: {fileID: 89140026}
+    - target: {fileID: 3257585296360693633, guid: d03e1c93e0acc5c4f95dd54573b36dff,
+        type: 3}
       propertyPath: _walkLines.Array.size
       value: 4
       objectReference: {fileID: 0}

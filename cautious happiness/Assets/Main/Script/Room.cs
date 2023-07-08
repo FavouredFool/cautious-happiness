@@ -82,6 +82,4 @@ public class Room : MonoBehaviour
         return spotChecks;
     }
 
-    public List<Room> NeighbourRooms { get; } = new();
-
 }

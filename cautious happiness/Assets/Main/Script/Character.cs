@@ -12,18 +12,17 @@ public class Character : MonoBehaviour
 
     public RoomManager _roomManager;
 
+    public ScheduleManager _scheduleManager;
+
     public float _speed = 1f;
 
 
-    public List<Vector2> WalkLinePath { get; set; }
+    public List<Vector2> WalkLinePath { get; set; } = new() {Vector2.zero};
 
     float _t = 0;
 
-    public void Start()
-    {
-        RecalibratePath();
-    }
-    
+
+
     public void Update()
     {
         if (Input.GetKey(KeyCode.A))
@@ -59,7 +58,7 @@ public class Character : MonoBehaviour
 
     public static Vector2 Interpolate(List<Vector2> path, float t)
     {
-        if (path.Count < 3)
+        if (path.Count < 4)
         {
             return path[0];
         }
@@ -78,6 +77,11 @@ public class Character : MonoBehaviour
             Vector2 currentPoint = path[i];
             Vector2 nextPoint = path[i + 1];
             float segmentDistance = Vector2.Distance(currentPoint, nextPoint);
+
+            if (currentPoint == nextPoint)
+            {
+                continue;
+            }
 
             if (currentDistance + segmentDistance >= targetDistance)
             {
@@ -104,28 +108,56 @@ public class Character : MonoBehaviour
 
     public void RecalibratePath()
     {
-        List<Vector2> newWalkLinePath = new();
+        _t = 0;
+        List <Vector2> newWalkLinePath = new();
 
         // Create new Walkline at my current position
         Vector2 currentPositionWalkLine = new Vector2(transform.position.x, transform.position.z);
-        newWalkLinePath.Add(currentPositionWalkLine);
+        //newWalkLinePath.Add(currentPositionWalkLine);
 
-        // Calculate the order of walklines based on schedule and avaliable rooms
-        // Currenttime is always t=0 ??? -> Even though its not in "scheduletime" t=0?
-        // -> kinda shit. Maybe make a new path
+        Room startRoom = CalculateStartRoom();
+
+        Room activeRoom = startRoom;
+
+        List<Room> allRooms = new();
+        allRooms.Add(startRoom);
+        allRooms.AddRange(_scheduleManager.GetRoomOrderList());
+        allRooms.Add(startRoom);
+
+        foreach (Room room in allRooms)
+        {
+            List<Vector2> waypointsWalkTowardsRoom = _roomManager.WalkTowardsRoom(room, activeRoom, null);
+            newWalkLinePath.AddRange(waypointsWalkTowardsRoom);
+
+            activeRoom = room;
+        }
+
+        //newWalkLinePath.Add(currentPositionWalkLine);
+
+        
+        WalkLinePath = newWalkLinePath;
+    }
+
+    public Room CalculateStartRoom()
+    {
+        // zum der in WalkLinePath und der entsprechenden t-Value am nächsten ist.
+
+        Room bestRoom = null;
+        float minDistance = float.PositiveInfinity;
 
         foreach (Room room in _roomManager.ActiveRooms)
         {
-            if (Vector2.Distance(room.WalkPoint, currentPositionWalkLine) < 0.01f)
+
+            float distanceToPlayer = Vector2.Distance(new Vector2(transform.position.x,transform.position.z), room.WalkPoint);
+
+            if (minDistance > distanceToPlayer)
             {
-                continue;
+                minDistance = distanceToPlayer;
+                bestRoom = room;
             }
 
-            newWalkLinePath.Add(room.WalkPoint);
         }
 
-        newWalkLinePath.Add(currentPositionWalkLine);
-
-        WalkLinePath = newWalkLinePath;
+        return bestRoom;
     }
 }

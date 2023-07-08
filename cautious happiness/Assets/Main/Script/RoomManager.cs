@@ -18,17 +18,17 @@ public class RoomManager : MonoBehaviour
     public List<Room> ActiveRooms { get; set; } = new();
 
     int _nrCount = 0;
-
+    
     public void Start()
     {
         InitializeNewRoom(null, RoomType.FLOOR2);
+
+        _character.RecalibratePath();
     }
 
     public void Update()
     {
         if (!Input.GetKeyDown(KeyCode.W)) return;
-
-
 
         CreateRoomSequence();
 
@@ -38,12 +38,37 @@ public class RoomManager : MonoBehaviour
     public RoomType DetermineType()
     {
         // Random, aber jeder Type darf nur ein mal vorhanden sein
-        Array values = Enum.GetValues(typeof(RoomType));
-        Random random = new Random();
-        RoomType type = (RoomType)values.GetValue(random.Next(values.Length));
-        Debug.Log(type);
-        return type;
+
+        List<RoomType> allTypes = EnumToList<RoomType>();
+
+        foreach (Room room in ActiveRooms)
+        {
+            allTypes.Remove(room.RoomType);
+        }
+
+        if (allTypes.Count == 0)
+        {
+            throw new Exception("All types have been used up");
+        }
+
+        RoomType randomType = allTypes[UnityEngine.Random.Range(0, allTypes.Count)];
+
+        return randomType;
     }
+
+
+    public static List<T> EnumToList<T>()
+    {
+        Type enumType = typeof(T);
+
+        if (!enumType.IsEnum)
+        {
+            throw new ArgumentException("T must be an enum type.");
+        }
+
+        return new List<T>((T[])Enum.GetValues(enumType));
+    }
+
 
     public RoomConnection CreateRoomSequence()
     {
@@ -225,6 +250,51 @@ public class RoomManager : MonoBehaviour
         Quaternion rotateForRoomRotation = Quaternion.Euler(0, angle, 0);
 
         newRoomConnection.Room.transform.rotation = lookTowardsRotation * rotateForRoomRotation;
+    }
+
+    public List<Vector2> WalkTowardsRoom(Room goalRoom, Room currentRoom, Room previousRoom)
+    {
+        // Um den Ort zu erreichen:
+        // Wo ist Charakter grade? Könnte auch nicht auf einem Waypoint sein -> würde sich ggf. lohnen zum nächsten zu gehen. (aber bitte nicht durch Wände)
+
+        // In welche Richtung muss ich mich bewegen?
+        if (goalRoom == currentRoom)
+        {
+            return new List<Vector2>() { goalRoom.WalkPoint };
+        }
+
+        List<Vector2> waypoints = new() { currentRoom.WalkPoint };
+
+        foreach (RoomConnection neighbourRoomConnection in currentRoom.RoomConnections)
+        {
+            if (neighbourRoomConnection == null)
+            {
+                continue;
+            }
+
+            if (neighbourRoomConnection.ConnectingRoom == null)
+            {
+                continue;
+            }
+
+            if (previousRoom == neighbourRoomConnection.ConnectingRoom)
+            {
+                continue;
+            }
+
+            List<Vector2> result = WalkTowardsRoom(goalRoom, neighbourRoomConnection.ConnectingRoom, currentRoom);
+
+            if (result == null) continue;
+
+            waypoints.AddRange(result);
+
+            return waypoints;
+        }
+
+        
+        
+
+        return null;
     }
 
     public void AddRoom(Room room)
