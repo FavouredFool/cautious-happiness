@@ -1,7 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
 using UnityEngine;
+using Quaternion = UnityEngine.Quaternion;
+using Random = System.Random;
+using Vector2 = UnityEngine.Vector2;
+using Vector3 = UnityEngine.Vector3;
 
 public class RoomManager : MonoBehaviour
 {
@@ -51,8 +56,6 @@ public class RoomManager : MonoBehaviour
         // room drehen, sodass eine der Connections in die richtige Richtung zeigt.
         // 1. Connection auswählen
 
-
-
         if (existingConnection != null)
         {
             RotateNewRoom(newRoom, existingConnection.Room);
@@ -75,13 +78,18 @@ public class RoomManager : MonoBehaviour
         {
             if (newConnection.ConnectingRoom != null) continue;
 
-            //Vector2 toConnection = newConnection.ConnectionPosition - newRoom.WalkPoint;
+            Vector2 toConnection = newConnection.ConnectionPosition - newRoom.WalkPoint;
 
             // In Richtung drehen damit's eine passende Connection wird!
-            //newRoom.transform.right = (existingRoom.WalkPoint - newRoom.WalkPoint) ;
-            // + Rotation je nachdem welche Connection es ist oben drauf?
+            Vector2 forward2D = existingRoom.WalkPoint - newRoom.WalkPoint;
+
+            Vector3 forward3D = new Vector3(forward2D.x, 0, forward2D.y);
             
 
+            Quaternion lookTowardsRotation = Quaternion.LookRotation(forward3D, Vector3.up);
+            Quaternion rotateForRoomRotation = Quaternion.Euler(0, Vector2.SignedAngle(forward2D, toConnection), 0);
+
+            newRoom.transform.rotation = lookTowardsRotation * rotateForRoomRotation;
             return;
         }
 
