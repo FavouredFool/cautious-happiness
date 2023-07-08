@@ -20,27 +20,91 @@ public class RoomManager : MonoBehaviour
 
     public void Update()
     {
-        if (Input.GetKeyDown(KeyCode.W))
-        {
-            // hänge an den bestehenden Raum nen neuen Raum an
-            FindAndAddNewRoom(ActiveRooms[0]);
-        }
+        if (!Input.GetKeyDown(KeyCode.W)) return;
+
+
+        // hänge an den bestehenden Raum nen neuen Raum an
+        RoomConnection usedConnection = FindConnection();
+
+        InitializeNewRoom(GetRoomPlacementFromConnection(usedConnection), usedConnection);
     }
 
-    public void FindAndAddNewRoom(Room baseRoom)
+    public RoomConnection FindConnection()
+    {
+        RoomConnection foundConnection = null;
+        int breakOut = 0;
+
+        while (foundConnection == null && breakOut < 10000)
+        {
+            // find random room
+            Room roomToAddTo = FindRoomToAddTo();
+
+            // find random connection
+            foundConnection = FindConnectionForRoom(roomToAddTo);
+
+            breakOut++;
+        }
+
+        if (breakOut >= 10000)
+        {
+            throw new Exception("Broke out of endless loop");
+        }
+
+        return foundConnection;
+    }
+
+    public Room FindRoomToAddTo()
+    {
+        return ActiveRooms[0];
+
+
+        return null;
+    }
+
+    public RoomConnection FindConnectionForRoom(Room baseRoom)
     {
         // wir nehmen von BaseRoom eine Connection die noch nicht besetzt ist
 
-        foreach (RoomConnection existingConnection in baseRoom.RoomConnections)
-        {
-            if (existingConnection.ConnectingRoom != null) continue;
+        // test ob dieser Raum noch was frei hat.
+        bool isAllFull = true;
 
-            // kann besetzt werden
-            InitializeNewRoom(GetRoomPlacementFromConnection(existingConnection), existingConnection);
-            return;
+        foreach (RoomConnection room in baseRoom.RoomConnections)
+        {
+            if (room.ConnectingRoom == null)
+            {
+                isAllFull = false;
+                break;
+            }
         }
 
-        Debug.Log("es wurde keine nicht besetzte Connection gefunden :c");
+        if (isAllFull)
+        {
+            Debug.Log("es wurde keine nicht besetzte Connection gefunden :c");
+            return null;
+        }
+
+        RoomConnection usedConnection = null;
+        int breakOut = 0;
+        while (usedConnection == null && breakOut < 10000)
+        {
+            RoomConnection testedConnection = baseRoom.RoomConnections[UnityEngine.Random.Range(0, baseRoom.RoomConnections.Count)];
+
+            // einen Raum gefunden, der noch nicht gefüllt ist (hier muss noch validiert werden ob der zu platzierende Raum überhaupt platziert werden kann.
+            if (testedConnection.ConnectingRoom == null)
+            {
+                usedConnection = testedConnection;
+            }
+
+            breakOut++;
+        }
+
+        if (breakOut >= 10000)
+        {
+            throw new Exception("Broken out of endless loop");
+        }
+
+        // kann besetzt werden
+        return usedConnection;
     }
 
     public Vector2 GetRoomPlacementFromConnection(RoomConnection existingConnection)
@@ -58,7 +122,9 @@ public class RoomManager : MonoBehaviour
 
         if (existingConnection != null)
         {
-            RotateNewRoom(newRoom, existingConnection.Room);
+            RoomConnection newRoomConnection = newRoom.RoomConnections[UnityEngine.Random.Range(0, newRoom.RoomConnections.Count)];
+
+            RotateNewRoom(newRoomConnection, existingConnection.Room);
 
             if (existingConnection.ConnectingRoom != null)
             {
@@ -66,34 +132,28 @@ public class RoomManager : MonoBehaviour
             }
 
             // in beide Richtungen verbinden! -> vorher auch feststellen mit welcher existingConnection ich den raum verbinden will.
+            newRoomConnection.ConnectingRoom = existingConnection.Room;
             existingConnection.ConnectingRoom = newRoom;
         }
 
         AddRoom(newRoom);
     }
 
-    void RotateNewRoom(Room newRoom, Room existingRoom)
+    void RotateNewRoom(RoomConnection newRoomConnection, Room existingRoom)
     {
-        foreach (RoomConnection newConnection in newRoom.RoomConnections)
-        {
-            if (newConnection.ConnectingRoom != null) continue;
+        // unrotated
+        Vector2 toConnection = newRoomConnection.ConnectionPosition - newRoomConnection.Room.WalkPoint;
 
-            Vector2 toConnection = newConnection.ConnectionPosition - newRoom.WalkPoint;
+        // In Richtung drehen damit's eine passende Connection wird!
+        Vector2 forward2D = existingRoom.WalkPoint - newRoomConnection.Room.WalkPoint;
+        Vector3 forward3D = new Vector3(forward2D.x, 0, forward2D.y);
+ 
+        Quaternion lookTowardsRotation = Quaternion.LookRotation(forward3D, Vector3.up);
+        float angle = Vector2.SignedAngle(Vector2.up, toConnection);
 
-            // In Richtung drehen damit's eine passende Connection wird!
-            Vector2 forward2D = existingRoom.WalkPoint - newRoom.WalkPoint;
+        Quaternion rotateForRoomRotation = Quaternion.Euler(0, angle, 0);
 
-            Vector3 forward3D = new Vector3(forward2D.x, 0, forward2D.y);
-            
-
-            Quaternion lookTowardsRotation = Quaternion.LookRotation(forward3D, Vector3.up);
-            Quaternion rotateForRoomRotation = Quaternion.Euler(0, Vector2.SignedAngle(forward2D, toConnection), 0);
-
-            newRoom.transform.rotation = lookTowardsRotation * rotateForRoomRotation;
-            return;
-        }
-
-        Debug.Log("Didnt find a good rotation");
+        newRoomConnection.Room.transform.rotation = lookTowardsRotation * rotateForRoomRotation;
     }
 
     public void AddRoom(Room room)
