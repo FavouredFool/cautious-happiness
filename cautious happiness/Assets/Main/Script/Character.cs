@@ -21,9 +21,9 @@ public class Character : MonoBehaviour
 
     public void Start()
     {
-        WalkLinePath = RecalibratePath();
+        RecalibratePath();
     }
-
+    
     public void Update()
     {
         if (Input.GetKey(KeyCode.A))
@@ -64,6 +64,11 @@ public class Character : MonoBehaviour
             return path[0];
         }
 
+        if (Math.Abs(t - 1) < 0.01f)
+        {
+            t = 0;
+        }
+
         float totalDistance = GetTotalDistance(path);
         float targetDistance = totalDistance * Mathf.Clamp01(t);
 
@@ -97,7 +102,7 @@ public class Character : MonoBehaviour
         return totalDistance;
     }
 
-    List<Vector2> RecalibratePath()
+    public void RecalibratePath()
     {
         List<Vector2> newWalkLinePath = new();
 
@@ -121,6 +126,6 @@ public class Character : MonoBehaviour
 
         newWalkLinePath.Add(currentPositionWalkLine);
 
-        return newWalkLinePath;
+        WalkLinePath = newWalkLinePath;
     }
 }

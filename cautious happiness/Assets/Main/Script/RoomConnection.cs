@@ -2,15 +2,20 @@ using UnityEngine;
 
 public class RoomConnection
 {
-    public RoomConnection(Vector2 position, Room room)
+    int _connectionIndex;
+
+    public RoomConnection(int connectionIndex, Room room)
     {
-        ConnectionPosition = position;
+        _connectionIndex = connectionIndex;
         Room = room;
     }
 
     public Room Room { get; set; }
 
-    public Vector2 ConnectionPosition { get; }
-
     public Room ConnectingRoom { get; set; } = null;
+
+    public Vector2 GetConnectionPosition()
+    {
+        return Room.GetConnectionFromTransform(_connectionIndex);
+    }
 }

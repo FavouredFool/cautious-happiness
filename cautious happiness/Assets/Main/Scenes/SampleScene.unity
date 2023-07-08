@@ -133,8 +133,9 @@ GameObject:
   m_Component:
   - component: {fileID: 89140024}
   - component: {fileID: 89140025}
+  - component: {fileID: 89140026}
   m_Layer: 0
-  m_Name: RoomManager
+  m_Name: Manager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -167,8 +168,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de75b87ba1029f24a99145ab79bf4365, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _roomPrefab: {fileID: 980488611524456042, guid: fe8546005c5c1a94090cd53a4869b61c,
-    type: 3}
+  _character: {fileID: 1520531568}
+  _roomPrefabs:
+  - {fileID: 980488611524456042, guid: fcf04fbb83b67d54a9b2422e65e23ec4, type: 3}
+  - {fileID: 980488611524456042, guid: e8027f4dad7b9ed4c89c9ec090111477, type: 3}
+  - {fileID: 980488611524456042, guid: 2101a59ec0ea1b04fa688cdb631e4017, type: 3}
+  - {fileID: 980488611524456042, guid: bfcd2e46912faa541b1e08b514013d52, type: 3}
+  - {fileID: 980488611524456042, guid: f29291b22b8aced469ed36ee58105673, type: 3}
+  - {fileID: 980488611524456042, guid: d4ea187745b3ca245824fc93b488d685, type: 3}
+  - {fileID: 980488611524456042, guid: fef47cfb088807348baae062d7bc4f6c, type: 3}
+--- !u!114 &89140026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 89140023}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 168f387572fb48642be2677c6f9a3f72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -473,6 +493,18 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1520531568 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3257585296360693633, guid: d03e1c93e0acc5c4f95dd54573b36dff,
+    type: 3}
+  m_PrefabInstance: {fileID: 3257585296167102252}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa895057e75ba834ebaba21fa91ae99c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &3257585296167102252
 PrefabInstance:
   m_ObjectHideFlags: 0
