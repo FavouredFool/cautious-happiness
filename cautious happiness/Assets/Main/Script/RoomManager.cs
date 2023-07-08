@@ -85,11 +85,10 @@ public class RoomManager : MonoBehaviour
                 connections.ConnectingRoom.RemoveFromConnections(roomToDestroy);
                 connections.ConnectingRoom = null;
             }
-            
         }
-        
-        await roomToDestroy.Disintegrate();
+
         ActiveRooms.Remove(roomToDestroy);
+        await roomToDestroy.Disintegrate();
         Destroy(roomToDestroy.gameObject);
     }
 
@@ -288,7 +287,9 @@ public class RoomManager : MonoBehaviour
                 Destroy(newRoom.gameObject);
                 return false;
             }
-            
+
+            _ = newRoom.Integrate();
+
 
             // in beide Richtungen verbinden! -> vorher auch feststellen mit welcher existingConnection ich den raum verbinden will.
             newRoomConnection.ConnectingRoom = existingConnection.Room;

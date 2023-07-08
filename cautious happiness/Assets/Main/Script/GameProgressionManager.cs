@@ -42,12 +42,14 @@ public class GameProgressionManager : MonoBehaviour
         }
     }
 
-    public void Phase()
+    public async void Phase()
     {
         for (int i = 0; i < 6; i++)
         {
             DestroyRoom();
         }
+
+        await Task.Delay(200);
 
         for (int i = 0; i < 6; i++)
         {

@@ -24,6 +24,9 @@ public class Room : MonoBehaviour
 
     public BoxCollider Collider { get; set; }
 
+
+    float _totalTime = 1.5f;
+
     public void Awake()
     {
         Collider = GetComponent<BoxCollider>();
@@ -97,12 +100,55 @@ public class Room : MonoBehaviour
         }
     }
 
+    public async Task Integrate()
+    {
+
+        foreach (MeshRenderer meshRenderer in _meshRenderer)
+        {
+            Material mat = meshRenderer.material;
+            AdvancedDissolveKeywords.SetKeyword(mat, AdvancedDissolveKeywords.State.Enabled, true);
+        }
+
+        float startTime = Time.time;
+        float maxTime = startTime + _totalTime;
+
+        while (Time.time < maxTime && Application.isPlaying)
+        {
+            float t = (Time.time - startTime) / _totalTime;
+
+            foreach (MeshRenderer meshRenderer in _meshRenderer)
+            {
+                Material mat = meshRenderer.material;
+                AdvancedDissolveProperties.Cutout.Standard.UpdateLocalProperty(mat, AdvancedDissolveProperties.Cutout.Standard.Property.Clip, 1-t);
+            }
+
+            await Task.Yield();
+        }
+    }
+
     public async Task Disintegrate()
     {
         foreach (MeshRenderer meshRenderer in _meshRenderer)
         {
             Material mat = meshRenderer.material;
-            AdvancedDissolveKeyworlds.
+            AdvancedDissolveKeywords.SetKeyword(mat, AdvancedDissolveKeywords.State.Enabled, true);
+        }
+
+
+        float startTime = Time.time;
+        float maxTime = startTime + _totalTime;
+
+        while (Time.time < maxTime && Application.isPlaying)
+        {
+            float t = (Time.time - startTime) / _totalTime;
+
+            foreach (MeshRenderer meshRenderer in _meshRenderer)
+            {
+                Material mat = meshRenderer.material;
+                AdvancedDissolveProperties.Cutout.Standard.UpdateLocalProperty(mat, AdvancedDissolveProperties.Cutout.Standard.Property.Clip, t);
+            }
+
+            await Task.Yield();
         }
     }
 
