@@ -19,14 +19,14 @@ public class GameProgressionManager : MonoBehaviour
 
     public void Start()
     {
-        _roomManager.InitializeNewRoom(null, RoomManager.RoomType.FLOOR2);
+        _roomManager.InitializeNewRoom(null, RoomManager.RoomType.BED);
 
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 6; i++)
         {
             CreateRoom();
         }
 
-        _character.RecalibratePath();
+        _character.InitializeCharacter();
 
         EndlessTimer();
     }
@@ -44,12 +44,15 @@ public class GameProgressionManager : MonoBehaviour
 
     public void Phase()
     {
-        DestroyRoom();
-        DestroyRoom();
-        DestroyRoom();
-        CreateRoom();
-        CreateRoom();
-        CreateRoom();
+        for (int i = 0; i < 6; i++)
+        {
+            DestroyRoom();
+        }
+
+        for (int i = 0; i < 6; i++)
+        {
+            CreateRoom();
+        }
     }
 
     public void CreateRoom()

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
@@ -19,25 +20,25 @@ public class RoomManager : MonoBehaviour
 
     int _nrCount = 0;
 
-    public void Update()
-    {
-        if (!Input.GetKeyDown(KeyCode.W)) return;
-
-        CreateRoom();
-    }
-
     public void CreateRoom()
     {
         CreateRoomSequence();
-
-        _character.RecalibratePath();
     }
 
+    public Room GetRoomFromRoomType(RoomType type)
+    {
+        foreach (Room room in ActiveRooms.Where(room => room.RoomType == type))
+        {
+            return room;
+        }
+
+        throw new Exception("room of type missing");
+    }
 
     public void DestroyRoom()
     {
         Room roomToDestroy = null;
-        Room startRoom = _character.CalculateStartRoom();
+        Room currentRoom = _character.LatestRoom;
 
         int failSave = 0; 
         while (failSave <= 10000)
@@ -45,7 +46,16 @@ public class RoomManager : MonoBehaviour
             failSave++;
             roomToDestroy = ActiveRooms[UnityEngine.Random.Range(0, ActiveRooms.Count)];
 
-            if (roomToDestroy == startRoom) continue;
+            if (roomToDestroy.RoomType == RoomType.BED)
+            {
+                continue;
+            }
+
+            if (roomToDestroy == currentRoom)
+            {
+                Debug.Log("U LOSE");
+                return;
+            }
 
             int amountOfNonNullConnections = 0;
 
@@ -97,12 +107,16 @@ public class RoomManager : MonoBehaviour
         {
             Debug.Log("All types have been used up");
             List<RoomType> fullList = EnumToList<RoomType>();
-            return fullList[UnityEngine.Random.Range(0, fullList.Count)];
+
+            return GetRandomType(fullList);
         }
 
-        RoomType randomType = allTypes[UnityEngine.Random.Range(0, allTypes.Count)];
+        return GetRandomType(allTypes);
+    }
 
-        return randomType;
+    public RoomType GetRandomType(List<RoomType> list)
+    {
+        return list[UnityEngine.Random.Range(0, list.Count)];
     }
 
 
@@ -221,7 +235,7 @@ public class RoomManager : MonoBehaviour
                 }
             }
         }
-
+        
         return true;
     }
 
@@ -267,11 +281,13 @@ public class RoomManager : MonoBehaviour
             RotateNewRoom(newRoomConnection, existingConnection.Room);
 
             // test ob die Kollision verursachen würde
+
             if (!TestNoCollisions(type, newRoomConnection))
             {
                 Destroy(newRoom.gameObject);
                 return false;
             }
+            
 
             // in beide Richtungen verbinden! -> vorher auch feststellen mit welcher existingConnection ich den raum verbinden will.
             newRoomConnection.ConnectingRoom = existingConnection.Room;
@@ -299,18 +315,12 @@ public class RoomManager : MonoBehaviour
         newRoomConnection.Room.transform.rotation = lookTowardsRotation * rotateForRoomRotation;
     }
 
-    public List<Vector2> WalkTowardsRoom(Room goalRoom, Room currentRoom, Room previousRoom)
+    public bool WalksTowardsRoom(Room goalRoom, Room currentRoom, Room previousRoom)
     {
-        // Um den Ort zu erreichen:
-        // Wo ist Charakter grade? Könnte auch nicht auf einem Waypoint sein -> würde sich ggf. lohnen zum nächsten zu gehen. (aber bitte nicht durch Wände)
-
-        // In welche Richtung muss ich mich bewegen?
         if (goalRoom == currentRoom)
         {
-            return new List<Vector2>() { goalRoom.WalkPoint };
+            return true;
         }
-
-        List<Vector2> waypoints = new() { currentRoom.WalkPoint };
 
         foreach (RoomConnection neighbourRoomConnection in currentRoom.RoomConnections)
         {
@@ -329,19 +339,13 @@ public class RoomManager : MonoBehaviour
                 continue;
             }
 
-            List<Vector2> result = WalkTowardsRoom(goalRoom, neighbourRoomConnection.ConnectingRoom, currentRoom);
-
-            if (result == null) continue;
-
-            waypoints.AddRange(result);
-
-            return waypoints;
+            if (WalksTowardsRoom(goalRoom, neighbourRoomConnection.ConnectingRoom, currentRoom))
+            {
+                return true;
+            }
         }
 
-        
-        
-
-        return null;
+        return false;
     }
 
     public void AddRoom(Room room)

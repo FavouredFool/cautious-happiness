@@ -5,6 +5,7 @@ using System.Numerics;
 using UnityEngine;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
+using static RoomManager;
 
 public class Character : MonoBehaviour
 {
@@ -19,127 +20,50 @@ public class Character : MonoBehaviour
 
     public List<Vector2> WalkLinePath { get; set; } = new() {Vector2.zero};
 
-    float _t = 0;
+    public Room GoalRoom { get; set; }
 
+    public Room LatestRoom { get; set; }
 
+    public Vector2 ActiveWaypoint { get; set; }
+
+    public void InitializeCharacter()
+    {
+        GoalRoom = _roomManager.GetRoomFromRoomType(RoomType.BED);
+        LatestRoom = CalculateCurrentRoom();
+    }
 
     public void Update()
     {
-        if (Input.GetKey(KeyCode.A))
+        MoveCharacter();
+
+        if (Input.GetKeyDown(KeyCode.W))
         {
-            _t -= _speed * Time.deltaTime;
+            GoalRoom = _roomManager.GetRoomFromRoomType(_roomManager.GetRandomType(EnumToList<RoomType>()));
         }
-
-        else if (Input.GetKey(KeyCode.D))
-        {
-            _t += _speed * Time.deltaTime;
-        }
-
-        if (_t >= 1)
-        {
-            float excess = _t - 1;
-            _t = excess;
-        }
-
-        if (_t < 0)
-        {
-            _t = 1 - _t;
-        }
-
-        transform.position = MoveCharacter(_t);
-    }
-
-    public Vector3 MoveCharacter(float t)
-    {
-        Vector2 interpolated = Interpolate(WalkLinePath, t);
-
-        return new Vector3(interpolated.x, 0, interpolated.y);
-    }
-
-    public static Vector2 Interpolate(List<Vector2> path, float t)
-    {
-        if (path.Count < 4)
-        {
-            return path[0];
-        }
-
-        if (Math.Abs(t - 1) < 0.01f)
-        {
-            t = 0;
-        }
-
-        float totalDistance = GetTotalDistance(path);
-        float targetDistance = totalDistance * Mathf.Clamp01(t);
-
-        float currentDistance = 0f;
-        for (int i = 0; i < path.Count - 1; i++)
-        {
-            Vector2 currentPoint = path[i];
-            Vector2 nextPoint = path[i + 1];
-            float segmentDistance = Vector2.Distance(currentPoint, nextPoint);
-
-            if (currentPoint == nextPoint)
-            {
-                continue;
-            }
-
-            if (currentDistance + segmentDistance >= targetDistance)
-            {
-                float remainingDistance = targetDistance - currentDistance;
-                float segmentT = remainingDistance / segmentDistance;
-                return Vector2.Lerp(currentPoint, nextPoint, segmentT);
-            }
-
-            currentDistance += segmentDistance;
-        }
-
-        throw new Exception("Failed to interpolate path. Invalid t value.");
-    }
-
-    static float GetTotalDistance(List<Vector2> path)
-    {
-        float totalDistance = 0f;
-        for (int i = 0; i < path.Count - 1; i++)
-        {
-            totalDistance += Vector2.Distance(path[i], path[i + 1]);
-        }
-        return totalDistance;
-    }
-
-    public void RecalibratePath()
-    {
-        _t = 0;
-        List <Vector2> newWalkLinePath = new();
-
-        // Create new Walkline at my current position
-        Vector2 currentPositionWalkLine = new Vector2(transform.position.x, transform.position.z);
-        //newWalkLinePath.Add(currentPositionWalkLine);
-
-        Room startRoom = CalculateStartRoom();
-
-        Room activeRoom = startRoom;
-
-        List<Room> allRooms = new();
-        allRooms.Add(startRoom);
-        allRooms.AddRange(_scheduleManager.GetRoomOrderList());
-        allRooms.Add(startRoom);
-
-        foreach (Room room in allRooms)
-        {
-            List<Vector2> waypointsWalkTowardsRoom = _roomManager.WalkTowardsRoom(room, activeRoom, null);
-
-            newWalkLinePath.AddRange(waypointsWalkTowardsRoom);
-
-            activeRoom = room;
-        }
-
-        //newWalkLinePath.Add(currentPositionWalkLine);
-
         
-        WalkLinePath = newWalkLinePath;
+        
     }
 
-    public Room CalculateStartRoom()
+    public void MoveCharacter()
+    {
+        if (Vector3.Distance(transform.position, new Vector3(GoalRoom.WalkPoint.x, 0, GoalRoom.WalkPoint.y)) < 0.01f)
+        {
+            return;
+        }
+
+        CalculateActiveWaypoint(LatestRoom, GoalRoom);
+
+        Vector3 direction = (new Vector3(ActiveWaypoint.x, 0, ActiveWaypoint.y) - transform.position).normalized;
+
+        transform.position += direction * _speed * Time.deltaTime;
+
+        if (Vector3.Distance(transform.position, new Vector3(ActiveWaypoint.x, 0, ActiveWaypoint.y)) < 0.01f)
+        {
+            LatestRoom = CalculateCurrentRoom();
+        }
+    }
+
+    public Room CalculateCurrentRoom()
     {
         // zum der in WalkLinePath und der entsprechenden t-Value am nächsten ist.
 
@@ -148,16 +72,31 @@ public class Character : MonoBehaviour
 
         foreach (Room room in _roomManager.ActiveRooms)
         {
-            float distanceToPlayer = Vector2.Distance(new Vector2(transform.position.x,transform.position.z), room.WalkPoint);
+            float distanceToPlayer = Vector2.Distance(new Vector2(transform.position.x, transform.position.z), room.WalkPoint);
 
             if (minDistance > distanceToPlayer)
             {
                 minDistance = distanceToPlayer;
                 bestRoom = room;
             }
-
         }
 
         return bestRoom;
+    }
+
+    public void CalculateActiveWaypoint(Room latestRoom, Room goalRoom)
+    {
+        foreach (RoomConnection neighbourRoomConnection in latestRoom.RoomConnections)
+        {
+            Room neighbourRoom = neighbourRoomConnection.ConnectingRoom;
+
+            if (neighbourRoom == null) continue;
+
+            if (_roomManager.WalksTowardsRoom(goalRoom, neighbourRoom, latestRoom))
+            {
+                ActiveWaypoint = neighbourRoom.WalkPoint;
+                break;
+            }
+        }
     }
 }
