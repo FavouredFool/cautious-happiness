@@ -36,7 +36,7 @@ public class GameProgressionManager : MonoBehaviour
 
     public async void EndlessTimer()
     {
-        await Task.Delay(2000);
+        await Task.Delay(3000);
 
         int failSave = 0;
 

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 using static RoomManager;
+using Debug = UnityEngine.Debug;
 
 public class ScheduleManager : MonoBehaviour
 {
@@ -23,6 +24,8 @@ public class ScheduleManager : MonoBehaviour
 
         if (currentHour == 12) currentHour = 0;
 
+        Debug.Log(currentHour);
+
         RoomType type;
 
         switch (currentHour)
@@ -34,22 +37,22 @@ public class ScheduleManager : MonoBehaviour
                 type = RoomType.BED;
                 break;
             case 2:
-                type = RoomType.PANTRY;
+                type = RoomType.BED;
                 break;
             case 3:
-                type = RoomType.TOILET;
+                type = RoomType.PANTRY;
                 break;
             case 4:
                 type = RoomType.TOILET;
                 break;
             case 5:
-                type = RoomType.KITCHEN;
+                type = RoomType.TOILET;
                 break;
             case 6:
                 type = RoomType.KITCHEN;
                 break;
             case 7:
-                type = RoomType.LIVING;
+                type = RoomType.KITCHEN;
                 break;
             case 8:
                 type = RoomType.LIVING;
@@ -58,44 +61,14 @@ public class ScheduleManager : MonoBehaviour
                 type = RoomType.LIVING;
                 break;
             case 10:
-                type = RoomType.PANTRY;
+                type = RoomType.LIVING;
                 break;
             case 11:
+                type = RoomType.PANTRY;
+                break;
+            default:
                 type = RoomType.BED;
                 break;
-        }
-
-        if (_clock.t < 0.3f)
-        {
-            type = RoomType.BED;
-        }
-        else if (_clock.t < 0.35f)
-        {
-            type = RoomType.TOILET;
-        }
-        else if (_clock.t < 0.5f)
-        {
-            type = RoomType.KITCHEN;
-        }
-        else if (_clock.t < 0.6f)
-        {
-            type = RoomType.PANTRY;
-        }
-        else if (_clock.t < 0.8f)
-        {
-            type = RoomType.LIVING;
-        }
-        else if (_clock.t < 0.9f)
-        {
-            type = RoomType.TOILET;
-        }
-        else if (_clock.t < 1f)
-        {
-            type = RoomType.BED;
-        }
-        else
-        {
-            type = RoomType.BED;
         }
 
         return _roomManager.GetRoomFromRoomType(type);

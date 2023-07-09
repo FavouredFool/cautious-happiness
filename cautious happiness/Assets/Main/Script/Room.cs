@@ -25,7 +25,7 @@ public class Room : MonoBehaviour
     public RoomType RoomType => _roomType;
 
     float _createTime = 1.5f;
-    float _destroyTime = 15;
+    float _destroyTime = 10;
 
     public void Awake()
     {
@@ -126,7 +126,7 @@ public class Room : MonoBehaviour
         }
     }
 
-    public async Task Disintegrate()
+    public async Task Disintegrate(AnimationCurve curve)
     {
         foreach (MeshRenderer meshRenderer in _meshRenderer)
         {
@@ -145,7 +145,7 @@ public class Room : MonoBehaviour
             foreach (MeshRenderer meshRenderer in _meshRenderer)
             {
                 Material mat = meshRenderer.material;
-                AdvancedDissolveProperties.Cutout.Standard.UpdateLocalProperty(mat, AdvancedDissolveProperties.Cutout.Standard.Property.Clip, t);
+                AdvancedDissolveProperties.Cutout.Standard.UpdateLocalProperty(mat, AdvancedDissolveProperties.Cutout.Standard.Property.Clip, curve.Evaluate((t)));
             }
 
             await Task.Yield();

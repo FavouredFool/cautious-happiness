@@ -21,6 +21,9 @@ public class RoomManager : MonoBehaviour
     public Room[] _roomPrefabs;
     public List<Room> ActiveRooms { get; set; } = new();
 
+
+    public AnimationCurve _curve;
+
     int _nrCount = 0;
 
     public async Task CreateRoom()
@@ -68,7 +71,7 @@ public class RoomManager : MonoBehaviour
 
     public async Task RemoveRoom(Room roomToDestroy)
     {
-        await roomToDestroy.Disintegrate();
+        await roomToDestroy.Disintegrate(_curve);
 
         // Kill dependencies
         foreach (RoomConnection connections in roomToDestroy.RoomConnections)
