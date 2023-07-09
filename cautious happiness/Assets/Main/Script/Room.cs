@@ -25,7 +25,7 @@ public class Room : MonoBehaviour
     public RoomType RoomType => _roomType;
 
     float _createTime = 1.5f;
-    public static float _destroyTime = 10;
+    public static float _destroyTime = 15;
 
     public void Awake()
     {

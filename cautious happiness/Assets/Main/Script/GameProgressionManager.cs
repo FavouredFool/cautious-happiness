@@ -17,6 +17,8 @@ public class GameProgressionManager : MonoBehaviour
 
     RoomManager.RoomType _lastRoom = RoomManager.RoomType.BED;
 
+    public int score;
+
     public void Awake()
     {
         _roomManager = GetComponent<RoomManager>();
@@ -42,6 +44,8 @@ public class GameProgressionManager : MonoBehaviour
 
         int failSave = 0;
 
+        Room._destroyTime = 25f;
+
         while (Application.isPlaying && failSave < 10000)
         {
             failSave++;
@@ -56,7 +60,15 @@ public class GameProgressionManager : MonoBehaviour
 
             await DestroyPhase(roomType);
 
-            Room._destroyTime -= 0.5f;
+            score++;
+
+            if (score < 3)
+            {
+                Room._destroyTime = 26 - (score * 2f);
+            }
+
+            Room._destroyTime = 18 - ((score - 3) * 1f);
+            
 
             if (!Application.isPlaying) break;
 

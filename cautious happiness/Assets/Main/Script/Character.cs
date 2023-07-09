@@ -25,7 +25,7 @@ public class Character : MonoBehaviour
 
     public Room LatestRoom { get; set; }
 
-    public Vector2 ActiveWaypoint { get; set; }
+    public Room ActiveWaypoint { get; set; }
 
     public Animator animator;
 
@@ -37,6 +37,7 @@ public class Character : MonoBehaviour
     public void InitializeCharacter()
     {
         LatestRoom = CalculateCurrentRoom();
+        ActiveWaypoint = LatestRoom;
     }
 
     public void Update()
@@ -63,15 +64,15 @@ public class Character : MonoBehaviour
         }
 
 
-        if (Vector3.Distance(transform.position, new Vector3(ActiveWaypoint.x, 0, ActiveWaypoint.y)) < 0.1f)
+        if (Vector3.Distance(transform.position, new Vector3(ActiveWaypoint.WalkPoint.x, 0, ActiveWaypoint.WalkPoint.y)) < 0.1f)
         {
-            LatestRoom = CalculateCurrentRoom();
+            LatestRoom = ActiveWaypoint;
         }
 
 
         CalculateActiveWaypoint(LatestRoom, GoalRoom);
 
-        Vector3 direction = (new Vector3(ActiveWaypoint.x, 0, ActiveWaypoint.y) - transform.position).normalized;
+        Vector3 direction = (new Vector3(ActiveWaypoint.WalkPoint.x, 0, ActiveWaypoint.WalkPoint.y) - transform.position).normalized;
 
         AnimateCharacter(direction);
 
@@ -112,11 +113,11 @@ public class Character : MonoBehaviour
 
                 if (Math.Abs(Vector2.Dot(directFromPlayer, directFromWaypoint) - 1) < 0.005f)
                 {
-                    ActiveWaypoint = neighbourRoom.WalkPoint;
+                    ActiveWaypoint = neighbourRoom;
                 }
                 else
                 {
-                    ActiveWaypoint = latestRoom.WalkPoint;
+                    ActiveWaypoint = latestRoom;
                 }
 
                 
