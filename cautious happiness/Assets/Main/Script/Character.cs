@@ -6,6 +6,7 @@ using UnityEngine;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
 using static RoomManager;
+using Quaternion = UnityEngine.Quaternion;
 
 public class Character : MonoBehaviour
 {
@@ -26,10 +27,13 @@ public class Character : MonoBehaviour
 
     public Vector2 ActiveWaypoint { get; set; }
 
+    public Animator animator;
+
     public void InitializeCharacter()
     {
         GoalRoom = _roomManager.GetRoomFromRoomType(RoomType.BED);
         LatestRoom = CalculateCurrentRoom();
+        animator.GetComponent<Animator>();
     }
 
     public void Update()
@@ -42,6 +46,19 @@ public class Character : MonoBehaviour
         {
             GoalRoom = _roomManager.GetRoomFromRoomType(_roomManager.GetRandomType(EnumToList<RoomType>()));
         }
+
+        
+
+    }
+
+    public void AnimateCharacter(Vector3 direction)
+    {
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, 0.5f);
+
+
+        // why does it not work?
+        //animator.SetTrigger("Bob_Walk");
     }
 
     public void MoveCharacter()
@@ -51,9 +68,13 @@ public class Character : MonoBehaviour
             return;
         }
 
+        
+
         CalculateActiveWaypoint(LatestRoom, GoalRoom);
 
         Vector3 direction = (new Vector3(ActiveWaypoint.x, 0, ActiveWaypoint.y) - transform.position).normalized;
+
+        AnimateCharacter(direction);
 
         transform.position += direction * _speed * Time.deltaTime;
 
