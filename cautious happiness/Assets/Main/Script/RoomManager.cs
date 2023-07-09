@@ -23,10 +23,21 @@ public class RoomManager : MonoBehaviour
 
     public Score _score;
 
+    AudioSource source;
 
     public AnimationCurve _curve;
 
     int _nrCount = 0;
+
+    public void Awake()
+    {
+        source = GetComponent<AudioSource>();
+    }
+
+    public void Start()
+    {
+        //source.Play();
+    }
 
     public async Task CreateRoom()
     {

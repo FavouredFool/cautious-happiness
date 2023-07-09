@@ -58,7 +58,7 @@ public class Character : MonoBehaviour
 
     public void MoveCharacter()
     {
-        if (Vector3.Distance(transform.position, new Vector3(GoalRoom.WalkPoint.x, 0, GoalRoom.WalkPoint.y)) < 0.01f)
+        if (Vector3.Distance(transform.position, new Vector3(GoalRoom.WalkPoint.x, 0, GoalRoom.WalkPoint.y)) < 0.05f)
         {
             return;
         }
