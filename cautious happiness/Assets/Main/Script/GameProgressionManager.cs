@@ -43,7 +43,7 @@ public class GameProgressionManager : MonoBehaviour
         while (Application.isPlaying && failSave < 10000)
         {
             failSave++;
-            await DestroyPhase();
+            await DestroyPhase(_roomManager.GetRandomType(RoomManager.EnumToList<RoomManager.RoomType>()));
 
             if (!Application.isPlaying) break;
 
@@ -61,16 +61,16 @@ public class GameProgressionManager : MonoBehaviour
         await CreateRoom();
     }
 
-    public async Task DestroyPhase()
+    public async Task DestroyPhase(RoomManager.RoomType type)
     {
         _tempRooms = new(_roomManager.ActiveRooms);
 
         for (int i = 0; i < 5; i++)
         {
-            _ = DestroyRoom();
+            _ = DestroyRoom(type);
         }
 
-        await DestroyRoom();
+        await DestroyRoom(type);
     }
 
     public async Task CreateRoom()
@@ -78,9 +78,9 @@ public class GameProgressionManager : MonoBehaviour
         await _roomManager.CreateRoom();
     }
 
-    public async Task DestroyRoom()
+    public async Task DestroyRoom(RoomManager.RoomType type)
     {
-        Room room = _roomManager.GetRoomToDestroy(_tempRooms);
+        Room room = _roomManager.GetRoomToDestroy(_tempRooms, type);
         _tempRooms.Remove(room);
 
         await _roomManager.RemoveRoom(room);

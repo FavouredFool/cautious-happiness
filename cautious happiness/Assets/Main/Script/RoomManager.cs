@@ -39,7 +39,7 @@ public class RoomManager : MonoBehaviour
         throw new Exception("room of type missing");
     }
 
-    public Room GetRoomToDestroy(List<Room> remainingRooms)
+    public Room GetRoomToDestroy(List<Room> remainingRooms, RoomType type)
     {
         Room roomToDestroy = null;
 
@@ -49,7 +49,7 @@ public class RoomManager : MonoBehaviour
             failSave++;
             roomToDestroy = remainingRooms[UnityEngine.Random.Range(0, remainingRooms.Count)];
 
-            if (roomToDestroy.RoomType == RoomType.BED)
+            if (roomToDestroy.RoomType == type)
             {
                 continue;
             }
