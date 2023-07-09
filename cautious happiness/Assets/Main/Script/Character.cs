@@ -93,7 +93,7 @@ public class Character : MonoBehaviour
         }
 
         Debug.LogWarning("Found no rooms");
-        return _roomManager.ActiveRooms[0];
+        return null;
     }
 
     public void CalculateActiveWaypoint(Room latestRoom, Room goalRoom)

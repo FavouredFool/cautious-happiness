@@ -21,6 +21,8 @@ public class RoomManager : MonoBehaviour
     public Room[] _roomPrefabs;
     public List<Room> ActiveRooms { get; set; } = new();
 
+    public Score _score;
+
 
     public AnimationCurve _curve;
 
@@ -88,13 +90,18 @@ public class RoomManager : MonoBehaviour
             }
         }
 
-        ActiveRooms.Remove(roomToDestroy);
+        Room room = _character.CalculateCurrentRoom();
 
-        if (roomToDestroy == _character.LatestRoom)
+
+        if (room != null && roomToDestroy == room)
         {
-            SceneManager.LoadScene(1, LoadSceneMode.Single);
+            _score.ActivateEndScreen();
+            Time.timeScale = 0;
             return;
         }
+
+        ActiveRooms.Remove(roomToDestroy);
+
 
         Destroy(roomToDestroy.gameObject);
     }

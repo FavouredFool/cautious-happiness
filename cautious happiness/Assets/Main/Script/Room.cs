@@ -130,6 +130,11 @@ public class Room : MonoBehaviour
     {
         foreach (MeshRenderer meshRenderer in _meshRenderer)
         {
+            if (!Application.isPlaying)
+            {
+                return;
+            }
+
             Material mat = meshRenderer.material;
             AdvancedDissolveKeywords.SetKeyword(mat, AdvancedDissolveKeywords.State.Enabled, true);
         }
