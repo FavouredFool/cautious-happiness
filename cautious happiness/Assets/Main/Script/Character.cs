@@ -110,7 +110,7 @@ public class Character : MonoBehaviour
 
                 Vector2 directFromWaypoint = (neighbourRoom.WalkPoint - latestRoom.WalkPoint).normalized;
 
-                if (Math.Abs(Vector2.Dot(directFromPlayer, directFromWaypoint) - 1) < 0.001f)
+                if (Math.Abs(Vector2.Dot(directFromPlayer, directFromWaypoint) - 1) < 0.005f)
                 {
                     ActiveWaypoint = neighbourRoom.WalkPoint;
                 }
