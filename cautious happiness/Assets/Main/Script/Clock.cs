@@ -24,6 +24,16 @@ public class Clock : MonoBehaviour
             t += speed * Time.deltaTime;
         }
 
+        if (t >= 1)
+        {
+            t = t - 1;
+        }
+
+        if (t < 0)
+        {
+            t = 1 - t;
+        }
+
         TToHandMovement(t);
     }
 

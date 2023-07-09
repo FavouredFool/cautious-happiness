@@ -31,7 +31,6 @@ public class Character : MonoBehaviour
 
     public void InitializeCharacter()
     {
-        GoalRoom = _roomManager.GetRoomFromRoomType(RoomType.BED);
         LatestRoom = CalculateCurrentRoom();
         animator.GetComponent<Animator>();
     }
@@ -39,7 +38,8 @@ public class Character : MonoBehaviour
     public void Update()
     {
         GoalRoom = _scheduleManager.GetGoalRoomFromTValue();
-        Debug.Log(GoalRoom);
+        Debug.Log("goal: " + GoalRoom);
+        Debug.Log("active: " + LatestRoom);
         MoveCharacter();
     }
 
@@ -60,7 +60,6 @@ public class Character : MonoBehaviour
             return;
         }
 
-        
 
         CalculateActiveWaypoint(LatestRoom, GoalRoom);
 
@@ -80,9 +79,9 @@ public class Character : MonoBehaviour
     {
         foreach (Room room in _roomManager.ActiveRooms)
         {
-            foreach (BoxCollider collider in room._colliders)
+            foreach (BoxCollider roomcollider in room._colliders)
             {
-                if (collider.bounds.Contains(transform.position))
+                if (roomcollider.bounds.Contains(transform.position))
                 {
                     return room;
                 }
@@ -103,7 +102,21 @@ public class Character : MonoBehaviour
 
             if (_roomManager.WalksTowardsRoom(goalRoom, neighbourRoom, latestRoom))
             {
-                ActiveWaypoint = neighbourRoom.WalkPoint;
+                // angle test
+                Vector2 directFromPlayer = (neighbourRoom.WalkPoint - new Vector2(transform.position.x, transform.position.z)).normalized;
+
+                Vector2 directFromWaypoint = (neighbourRoom.WalkPoint - latestRoom.WalkPoint).normalized;
+
+                if (Math.Abs(Vector2.Dot(directFromPlayer, directFromWaypoint) - 1) < 0.05f)
+                {
+                    ActiveWaypoint = neighbourRoom.WalkPoint;
+                }
+                else
+                {
+                    ActiveWaypoint = latestRoom.WalkPoint;
+                }
+
+                
                 break;
             }
         }

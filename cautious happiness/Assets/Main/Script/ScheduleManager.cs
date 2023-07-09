@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using UnityEngine;
 using static RoomManager;
 using Debug = UnityEngine.Debug;
@@ -23,8 +24,6 @@ public class ScheduleManager : MonoBehaviour
         int currentHour = (int) (12 * _clock.t);
 
         if (currentHour == 12) currentHour = 0;
-
-        Debug.Log(currentHour);
 
         RoomType type;
 
@@ -67,6 +66,7 @@ public class ScheduleManager : MonoBehaviour
                 type = RoomType.PANTRY;
                 break;
             default:
+                throw new Exception("shouldnt be here");
                 type = RoomType.BED;
                 break;
         }

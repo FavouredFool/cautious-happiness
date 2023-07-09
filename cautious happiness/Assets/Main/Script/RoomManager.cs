@@ -73,6 +73,11 @@ public class RoomManager : MonoBehaviour
     {
         await roomToDestroy.Disintegrate(_curve);
 
+        if (!Application.isPlaying)
+        {
+            return;
+        }
+
         // Kill dependencies
         foreach (RoomConnection connections in roomToDestroy.RoomConnections)
         {
@@ -271,7 +276,7 @@ public class RoomManager : MonoBehaviour
     public bool InitializeNewRoom(RoomConnection existingConnection, RoomType type)
     {
         Room newRoom = Instantiate(GetRoomPrefabFromType(type), Vector3.zero, Quaternion.identity);
-        newRoom.gameObject.name = _nrCount.ToString();
+        newRoom.gameObject.name = type.ToString();
         _nrCount++;
         newRoom.InstantiateConnections();
 
