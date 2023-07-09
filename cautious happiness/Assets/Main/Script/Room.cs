@@ -25,7 +25,7 @@ public class Room : MonoBehaviour
     public RoomType RoomType => _roomType;
 
     float _createTime = 1.5f;
-    float _destroyTime = 8;
+    float _destroyTime = 15;
     
     public void InstantiateConnections()
     {

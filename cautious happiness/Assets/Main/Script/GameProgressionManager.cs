@@ -43,7 +43,12 @@ public class GameProgressionManager : MonoBehaviour
         while (Application.isPlaying && failSave < 10000)
         {
             failSave++;
-            await DestroyPhase(_roomManager.GetRandomType(RoomManager.EnumToList<RoomManager.RoomType>()));
+
+            List<RoomManager.RoomType> list = RoomManager.EnumToList<RoomManager.RoomType>();
+            list.Remove(RoomManager.RoomType.FLOOR1);
+            list.Remove(RoomManager.RoomType.FLOOR2);
+
+            await DestroyPhase(_roomManager.GetRandomType(list));
 
             if (!Application.isPlaying) break;
 

@@ -9,56 +9,54 @@ public class ScheduleManager : MonoBehaviour
 {
     RoomManager _roomManager;
 
+    public Clock _clock;
+
     public void Awake()
     {
         _roomManager = GetComponent<RoomManager>();
     }
 
-    public List<Room> GetRoomOrderList()
+
+    public Room GetGoalRoomFromTValue()
     {
-        List<Room> roomOrder = _roomManager.ActiveRooms;
+        RoomType type;
 
-        roomOrder.Sort(new RoomComparer());
-
-        return roomOrder;
-    }
-
-    public static int GetImportanceFromRoomType(RoomType type)
-    {
-        return type switch
+        if (_clock.t < 0.3f)
         {
-            RoomType.BED => 1,
-            RoomType.TOILET => 2,
-            RoomType.FLOOR1 => 3,
-            RoomType.FLOOR2 => 4,
-            RoomType.KITCHEN => 5,
-            RoomType.PANTRY => 6,
-            RoomType.LIVING => 7,
-            _ => -1
-        };
-    }
-
-    public class RoomComparer : IComparer<Room>
-    {
-        public int Compare(Room x, Room y)
-        {
-            int xImportance = GetImportanceFromRoomType(x.RoomType);
-            int yImportance = GetImportanceFromRoomType(y.RoomType);
-
-            if (xImportance < yImportance)
-            {
-                return -1;
-            }
-            else if (xImportance > yImportance)
-            {
-                return 1;
-            }
-            else
-            {
-                return 0;
-            }
+            type = RoomType.BED;
         }
+        else if (_clock.t < 0.35f)
+        {
+            type = RoomType.TOILET;
+        }
+        else if (_clock.t < 0.5f)
+        {
+            type = RoomType.KITCHEN;
+        }
+        else if (_clock.t < 0.6f)
+        {
+            type = RoomType.PANTRY;
+        }
+        else if (_clock.t < 0.8f)
+        {
+            type = RoomType.LIVING;
+        }
+        else if (_clock.t < 0.9f)
+        {
+            type = RoomType.TOILET;
+        }
+        else if (_clock.t < 1f)
+        {
+            type = RoomType.BED;
+        }
+        else
+        {
+            type = RoomType.BED;
+        }
+
+        return _roomManager.GetRoomFromRoomType(type);
     }
+    
 
 
 }

@@ -34,14 +34,14 @@ public class Character : MonoBehaviour
 
     public void Update()
     {
+        GoalRoom = _scheduleManager.GetGoalRoomFromTValue();
+
         MoveCharacter();
 
         if (Input.GetKeyDown(KeyCode.W))
         {
             GoalRoom = _roomManager.GetRoomFromRoomType(_roomManager.GetRandomType(EnumToList<RoomType>()));
         }
-        
-        
     }
 
     public void MoveCharacter()
