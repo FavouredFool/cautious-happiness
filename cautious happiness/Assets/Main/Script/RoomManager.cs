@@ -137,7 +137,7 @@ public class RoomManager : MonoBehaviour
         RoomConnection foundConnection = null;
         int breakOut = 0;
 
-        while (breakOut <= 10000)
+        while (breakOut <= 1000)
         {
             breakOut++;
 
@@ -161,7 +161,7 @@ public class RoomManager : MonoBehaviour
             }
         }
 
-        if (breakOut >= 10000)
+        if (breakOut >= 1000)
         {
             throw new Exception("Broke out of endless loop");
         }
