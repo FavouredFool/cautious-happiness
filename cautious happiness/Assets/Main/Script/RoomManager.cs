@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
 using Random = System.Random;
@@ -35,7 +36,7 @@ public class RoomManager : MonoBehaviour
         throw new Exception("room of type missing");
     }
 
-    public async void DestroyRoom()
+    public async Task DestroyRoom()
     {
         Room roomToDestroy = null;
         Room currentRoom = _character.LatestRoom;
@@ -49,12 +50,6 @@ public class RoomManager : MonoBehaviour
             if (roomToDestroy.RoomType == RoomType.BED)
             {
                 continue;
-            }
-
-            if (roomToDestroy == currentRoom)
-            {
-                Debug.Log("U LOSE");
-                return;
             }
 
             int amountOfNonNullConnections = 0;
@@ -89,6 +84,13 @@ public class RoomManager : MonoBehaviour
 
         ActiveRooms.Remove(roomToDestroy);
         await roomToDestroy.Disintegrate();
+
+        if (roomToDestroy == currentRoom)
+        {
+            Debug.Log("U LOSE");
+            return;
+        }
+
         Destroy(roomToDestroy.gameObject);
     }
 
@@ -229,10 +231,15 @@ public class RoomManager : MonoBehaviour
 
             foreach (Room room in ActiveRooms)
             {
-                if (room.Collider.bounds.Contains(newRoomConnection.Room.transform.position + newRoomConnection.Room.transform.rotation * spotCheck3D))
+                foreach (Collider collider in room._colliders)
                 {
-                    return false;
+                    if (collider.bounds.Contains(newRoomConnection.Room.transform.position + newRoomConnection.Room.transform.rotation * spotCheck3D))
+                    {
+                        return false;
+                    }
                 }
+
+                
             }
         }
         

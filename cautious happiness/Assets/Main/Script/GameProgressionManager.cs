@@ -28,7 +28,7 @@ public class GameProgressionManager : MonoBehaviour
 
         _character.InitializeCharacter();
 
-        EndlessTimer();
+        //EndlessTimer();
     }
 
     public async void EndlessTimer()
@@ -37,24 +37,25 @@ public class GameProgressionManager : MonoBehaviour
 
         while (Application.isPlaying)
         {
-            Phase();
+            await DestroyPhase();
+
+            for (int i = 0; i < 6; i++)
+            {
+                CreateRoom();
+            }
+
             await Task.Delay(_intervalTimeMS);
         }
     }
 
-    public async void Phase()
+    public async Task DestroyPhase()
     {
-        for (int i = 0; i < 6; i++)
+        
+        for (int i = 0; i < 5; i++)
         {
-            DestroyRoom();
+            _ = DestroyRoom();
         }
-
-        await Task.Delay(200);
-
-        for (int i = 0; i < 6; i++)
-        {
-            CreateRoom();
-        }
+        await DestroyRoom();
     }
 
     public void CreateRoom()
@@ -62,8 +63,8 @@ public class GameProgressionManager : MonoBehaviour
         _roomManager.CreateRoom();
     }
 
-    public void DestroyRoom()
+    public async Task DestroyRoom()
     {
-        _roomManager.DestroyRoom();
+        await _roomManager.DestroyRoom();
     }
 }

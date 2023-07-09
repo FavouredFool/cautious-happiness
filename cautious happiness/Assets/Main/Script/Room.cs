@@ -16,22 +16,17 @@ public class Room : MonoBehaviour
 
     public MeshRenderer[] _meshRenderer;
 
+    public Collider[] _colliders;
+
     public List<RoomConnection> RoomConnections { get; set; } = new();
 
     public Vector2 WalkPoint => new(_walkPointTransform.position.x, _walkPointTransform.position.z);
 
     public RoomType RoomType => _roomType;
 
-    public BoxCollider Collider { get; set; }
-
-
-    float _totalTime = 1.5f;
-
-    public void Awake()
-    {
-        Collider = GetComponent<BoxCollider>();
-    }
-
+    float _createTime = 1.5f;
+    float _destroyTime = 8;
+    
     public void InstantiateConnections()
     {
         for (int i = 0; i < _connectionTransforms.Count; i++)
@@ -110,11 +105,11 @@ public class Room : MonoBehaviour
         }
 
         float startTime = Time.time;
-        float maxTime = startTime + _totalTime;
+        float maxTime = startTime + _createTime;
 
         while (Time.time < maxTime && Application.isPlaying)
         {
-            float t = (Time.time - startTime) / _totalTime;
+            float t = (Time.time - startTime) / _createTime;
 
             foreach (MeshRenderer meshRenderer in _meshRenderer)
             {
@@ -136,11 +131,11 @@ public class Room : MonoBehaviour
 
 
         float startTime = Time.time;
-        float maxTime = startTime + _totalTime;
+        float maxTime = startTime + _destroyTime;
 
         while (Time.time < maxTime && Application.isPlaying)
         {
-            float t = (Time.time - startTime) / _totalTime;
+            float t = (Time.time - startTime) / _destroyTime;
 
             foreach (MeshRenderer meshRenderer in _meshRenderer)
             {

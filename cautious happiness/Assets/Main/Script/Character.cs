@@ -65,23 +65,19 @@ public class Character : MonoBehaviour
 
     public Room CalculateCurrentRoom()
     {
-        // zum der in WalkLinePath und der entsprechenden t-Value am nächsten ist.
-
-        Room bestRoom = null;
-        float minDistance = float.PositiveInfinity;
-
         foreach (Room room in _roomManager.ActiveRooms)
         {
-            float distanceToPlayer = Vector2.Distance(new Vector2(transform.position.x, transform.position.z), room.WalkPoint);
-
-            if (minDistance > distanceToPlayer)
+            foreach (BoxCollider collider in room._colliders)
             {
-                minDistance = distanceToPlayer;
-                bestRoom = room;
+                if (collider.bounds.Contains(transform.position))
+                {
+                    return room;
+                }
             }
         }
 
-        return bestRoom;
+        Debug.LogWarning("Found no rooms");
+        return _roomManager.ActiveRooms[0];
     }
 
     public void CalculateActiveWaypoint(Room latestRoom, Room goalRoom)
