@@ -29,10 +29,14 @@ public class Character : MonoBehaviour
 
     public Animator animator;
 
+    public void Awake()
+    {
+        animator.GetComponent<Animator>();
+    }
+
     public void InitializeCharacter()
     {
         LatestRoom = CalculateCurrentRoom();
-        animator.GetComponent<Animator>();
     }
 
     public void Update()
@@ -61,6 +65,12 @@ public class Character : MonoBehaviour
         }
 
 
+        if (Vector3.Distance(transform.position, new Vector3(ActiveWaypoint.x, 0, ActiveWaypoint.y)) < 0.1f)
+        {
+            LatestRoom = CalculateCurrentRoom();
+        }
+
+
         CalculateActiveWaypoint(LatestRoom, GoalRoom);
 
         Vector3 direction = (new Vector3(ActiveWaypoint.x, 0, ActiveWaypoint.y) - transform.position).normalized;
@@ -68,11 +78,6 @@ public class Character : MonoBehaviour
         AnimateCharacter(direction);
 
         transform.position += direction * _speed * Time.deltaTime;
-
-        if (Vector3.Distance(transform.position, new Vector3(ActiveWaypoint.x, 0, ActiveWaypoint.y)) < 0.01f)
-        {
-            LatestRoom = CalculateCurrentRoom();
-        }
     }
 
     public Room CalculateCurrentRoom()
