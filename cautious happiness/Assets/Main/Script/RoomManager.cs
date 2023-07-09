@@ -1,100 +1,361 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using Quaternion = UnityEngine.Quaternion;
+using Random = System.Random;
+using Vector2 = UnityEngine.Vector2;
+using Vector3 = UnityEngine.Vector3;
+
 
 public class RoomManager : MonoBehaviour
 {
-    public Room _roomPrefab;
+    public enum RoomType { FLOOR1, FLOOR2, PANTRY, LIVING, KITCHEN, TOILET, BED };
+
+    public Character _character;
+    public Room[] _roomPrefabs;
     public List<Room> ActiveRooms { get; set; } = new();
 
-    public void Start()
+    int _nrCount = 0;
+
+    public async Task CreateRoom()
     {
-        InitializeNewRoom(Vector2.zero, null);
+        CreateRoomSequence();
+        await Task.Delay(1500);
     }
 
-    public void Update()
+    public Room GetRoomFromRoomType(RoomType type)
     {
-        if (Input.GetKeyDown(KeyCode.W))
+        foreach (Room room in ActiveRooms.Where(room => room.RoomType == type))
         {
-            // hänge an den bestehenden Raum nen neuen Raum an
-            FindAndAddNewRoom(ActiveRooms[0]);
+            return room;
         }
+
+        throw new Exception("room of type missing");
     }
 
-    public void FindAndAddNewRoom(Room baseRoom)
+    public Room GetRoomToDestroy(List<Room> remainingRooms, RoomType type)
     {
-        // wir nehmen von BaseRoom eine Connection die noch nicht besetzt ist
+        Room roomToDestroy = null;
 
-        foreach (RoomConnection existingConnection in baseRoom.RoomConnections)
+        int failSave = 0; 
+        while (failSave <= 10000)
         {
-            if (existingConnection.ConnectingRoom != null) continue;
+            failSave++;
+            roomToDestroy = remainingRooms[UnityEngine.Random.Range(0, remainingRooms.Count)];
 
-            // kann besetzt werden
-            InitializeNewRoom(GetRoomPlacementFromConnection(existingConnection), existingConnection);
+            if (roomToDestroy.RoomType == type)
+            {
+                continue;
+            }
+
+            break;
+
+        }
+
+        if (failSave >= 10000)
+        {
+            throw new Exception("escaped endless loop");
+        }
+
+        return roomToDestroy;
+    }
+
+    public async Task RemoveRoom(Room roomToDestroy)
+    {
+        await roomToDestroy.Disintegrate();
+
+        // Kill dependencies
+        foreach (RoomConnection connections in roomToDestroy.RoomConnections)
+        {
+            if (connections.ConnectingRoom != null)
+            {
+                connections.ConnectingRoom.RemoveFromConnections(roomToDestroy);
+                connections.ConnectingRoom = null;
+            }
+        }
+
+        ActiveRooms.Remove(roomToDestroy);
+
+        if (roomToDestroy == _character.LatestRoom)
+        {
+            SceneManager.LoadScene(1, LoadSceneMode.Single);
             return;
         }
 
-        Debug.Log("es wurde keine nicht besetzte Connection gefunden :c");
+        Destroy(roomToDestroy.gameObject);
     }
 
-    public Vector2 GetRoomPlacementFromConnection(RoomConnection existingConnection)
+    public RoomType DetermineType()
+    {
+        // Random, aber jeder Type darf nur ein mal vorhanden sein
+
+        List<RoomType> allTypes = EnumToList<RoomType>();
+
+        foreach (Room room in ActiveRooms)
+        {
+            allTypes.Remove(room.RoomType);
+        }
+
+        if (allTypes.Count == 0)
+        {
+            Debug.Log("All types have been used up");
+            List<RoomType> fullList = EnumToList<RoomType>();
+
+            return GetRandomType(fullList);
+        }
+
+        return GetRandomType(allTypes);
+    }
+
+    public RoomType GetRandomType(List<RoomType> list)
+    {
+        return list[UnityEngine.Random.Range(0, list.Count)];
+    }
+
+
+    public static List<T> EnumToList<T>()
+    {
+        Type enumType = typeof(T);
+
+        if (!enumType.IsEnum)
+        {
+            throw new ArgumentException("T must be an enum type.");
+        }
+
+        return new List<T>((T[])Enum.GetValues(enumType));
+    }
+
+
+    public RoomConnection CreateRoomSequence()
+    {
+        RoomConnection foundConnection = null;
+        int breakOut = 0;
+
+        while (breakOut <= 10000)
+        {
+            breakOut++;
+
+            RoomType type = DetermineType();
+
+            Room roomToAddTo = FindRoomToAddTo();
+
+            // find random connection
+            foundConnection = FindConnectionForRoom(roomToAddTo);
+
+            if (foundConnection == null)
+            {
+                continue;
+            }
+
+            bool notCollided = InitializeNewRoom(foundConnection, type);
+
+            if (notCollided)
+            {
+                break;
+            }
+        }
+
+        if (breakOut >= 10000)
+        {
+            throw new Exception("Broke out of endless loop");
+        }
+
+        return foundConnection;
+    }
+
+    public Room FindRoomToAddTo()
+    {
+        return ActiveRooms[UnityEngine.Random.Range(0, ActiveRooms.Count)];
+    }
+
+    public RoomConnection FindConnectionForRoom(Room baseRoom)
+    {
+        // wir nehmen von BaseRoom eine Connection die noch nicht besetzt ist
+
+        // test ob dieser Raum noch was frei hat.
+        bool isAllFull = true;
+
+        foreach (RoomConnection room in baseRoom.RoomConnections)
+        {
+            if (room.ConnectingRoom == null)
+            {
+                isAllFull = false;
+                break;
+            }
+        }
+
+        if (isAllFull)
+        {
+            return null;
+        }
+
+        RoomConnection usedConnection = null;
+        int breakOut = 0;
+        while (usedConnection == null && breakOut < 10000)
+        {
+            RoomConnection testedConnection = baseRoom.RoomConnections[UnityEngine.Random.Range(0, baseRoom.RoomConnections.Count)];
+
+            // einen Raum gefunden, der noch nicht gefüllt ist (hier muss noch validiert werden ob der zu platzierende Raum überhaupt platziert werden kann.
+            if (testedConnection.ConnectingRoom == null)
+            {
+                usedConnection = testedConnection;
+            }
+
+            breakOut++;
+        }
+
+        if (breakOut >= 10000)
+        {
+            throw new Exception("Broken out of endless loop");
+        }
+
+        // kann besetzt werden
+        return usedConnection;
+    }
+
+
+    public bool TestNoCollisions(RoomType type, RoomConnection newRoomConnection)
+    {
+        foreach (Vector2 spotCheck in Room.GetSpotChecksPerType(type))
+        {
+            Vector3 spotCheck3D = new Vector3(spotCheck.x, 0, spotCheck.y);
+
+            foreach (Room room in ActiveRooms)
+            {
+                foreach (Collider collider in room._colliders)
+                {
+                    if (collider.bounds.Contains(newRoomConnection.Room.transform.position + newRoomConnection.Room.transform.rotation * spotCheck3D))
+                    {
+                        return false;
+                    }
+                }
+
+                
+            }
+        }
+        
+        return true;
+    }
+
+    public void PlaceRoomFromConnection(RoomConnection existingConnection, RoomConnection newConnection)
     {
         // wir nutzen bisher nur 1x1 Räume
-        return existingConnection.Room.WalkPoint + (existingConnection.ConnectionPosition - existingConnection.Room.WalkPoint) * 2;
+
+        float spacesFromStart = (int) Vector2.Distance(existingConnection.GetConnectionPosition(), existingConnection.Room.WalkPoint);
+        float spacesFromEnd = (int)Vector2.Distance(newConnection.GetConnectionPosition(), newConnection.Room.WalkPoint);
+
+        float totalSpaces = spacesFromStart + spacesFromEnd + 1;
+
+        Vector2 startPosition = existingConnection.Room.WalkPoint;
+        Vector2 direction = (existingConnection.GetConnectionPosition() - existingConnection.Room.WalkPoint).normalized;
+
+        Vector2 end = startPosition + direction * totalSpaces;
+
+        newConnection.Room.transform.position = new Vector3(end.x, 0, end.y);
     }
 
-    public void InitializeNewRoom(Vector2 position, RoomConnection existingConnection)
+    public Room GetRoomPrefabFromType(RoomType type)
     {
-        Room newRoom = Instantiate(_roomPrefab, new Vector3(position.x, 0, position.y), Quaternion.identity);
-        newRoom.SetConnectionsFromTransforms();
+        return _roomPrefabs[(int)type];
+    }
+
+    public bool InitializeNewRoom(RoomConnection existingConnection, RoomType type)
+    {
+        Room newRoom = Instantiate(GetRoomPrefabFromType(type), Vector3.zero, Quaternion.identity);
+        newRoom.gameObject.name = _nrCount.ToString();
+        _nrCount++;
+        newRoom.InstantiateConnections();
+
         // room drehen, sodass eine der Connections in die richtige Richtung zeigt.
         // 1. Connection auswählen
 
-
-
         if (existingConnection != null)
         {
-            RotateNewRoom(newRoom, existingConnection.Room);
+            RoomConnection newRoomConnection = newRoom.RoomConnections[UnityEngine.Random.Range(0, newRoom.RoomConnections.Count)];
 
-            if (existingConnection.ConnectingRoom != null)
+            // Place in room
+            PlaceRoomFromConnection(existingConnection, newRoomConnection);
+
+            RotateNewRoom(newRoomConnection, existingConnection.Room);
+
+            // test ob die Kollision verursachen würde
+
+            if (!TestNoCollisions(type, newRoomConnection))
             {
-                throw new Exception("There's already a room here");
+                Destroy(newRoom.gameObject);
+                return false;
             }
 
+            _ = newRoom.Integrate();
+
+
             // in beide Richtungen verbinden! -> vorher auch feststellen mit welcher existingConnection ich den raum verbinden will.
+            newRoomConnection.ConnectingRoom = existingConnection.Room;
             existingConnection.ConnectingRoom = newRoom;
         }
 
         AddRoom(newRoom);
+        return true;
     }
 
-    void RotateNewRoom(Room newRoom, Room existingRoom)
+    void RotateNewRoom(RoomConnection newRoomConnection, Room existingRoom)
     {
-        foreach (RoomConnection newConnection in newRoom.RoomConnections)
+        // unrotated
+        Vector2 toConnection = newRoomConnection.GetConnectionPosition() - newRoomConnection.Room.WalkPoint;
+
+        // In Richtung drehen damit's eine passende Connection wird!
+        Vector2 forward2D = existingRoom.WalkPoint - newRoomConnection.Room.WalkPoint;
+        Vector3 forward3D = new Vector3(forward2D.x, 0, forward2D.y);
+
+        Quaternion lookTowardsRotation = Quaternion.LookRotation(forward3D, Vector3.up);
+        float angle = Vector2.SignedAngle(Vector2.up, toConnection);
+
+        Quaternion rotateForRoomRotation = Quaternion.Euler(0, angle, 0);
+
+        newRoomConnection.Room.transform.rotation = lookTowardsRotation * rotateForRoomRotation;
+    }
+
+    public bool WalksTowardsRoom(Room goalRoom, Room currentRoom, Room previousRoom)
+    {
+        if (goalRoom == currentRoom)
         {
-            if (newConnection.ConnectingRoom != null) continue;
-
-            //Vector2 toConnection = newConnection.ConnectionPosition - newRoom.WalkPoint;
-
-            // In Richtung drehen damit's eine passende Connection wird!
-            //newRoom.transform.right = (existingRoom.WalkPoint - newRoom.WalkPoint) ;
-            // + Rotation je nachdem welche Connection es ist oben drauf?
-            
-
-            return;
+            return true;
         }
 
-        Debug.Log("Didnt find a good rotation");
+        foreach (RoomConnection neighbourRoomConnection in currentRoom.RoomConnections)
+        {
+            if (neighbourRoomConnection == null)
+            {
+                continue;
+            }
+
+            if (neighbourRoomConnection.ConnectingRoom == null)
+            {
+                continue;
+            }
+
+            if (previousRoom == neighbourRoomConnection.ConnectingRoom)
+            {
+                continue;
+            }
+
+            if (WalksTowardsRoom(goalRoom, neighbourRoomConnection.ConnectingRoom, currentRoom))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public void AddRoom(Room room)
     {
         ActiveRooms.Add(room);
-    }
-
-    public void RemoveRoom(Room room)
-    {
-        ActiveRooms.Remove(room);
     }
 }
