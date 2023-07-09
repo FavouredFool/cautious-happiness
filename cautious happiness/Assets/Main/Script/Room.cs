@@ -14,7 +14,7 @@ public class Room : MonoBehaviour
 
     public List<Transform> _connectionTransforms;
 
-    public MeshRenderer[] _meshRenderer;
+    MeshRenderer[] _meshRenderer;
 
     public Collider[] _colliders;
 
@@ -26,7 +26,12 @@ public class Room : MonoBehaviour
 
     float _createTime = 1.5f;
     float _destroyTime = 15;
-    
+
+    public void Awake()
+    {
+        _meshRenderer = GetComponentsInChildren<MeshRenderer>();
+    }
+
     public void InstantiateConnections()
     {
         for (int i = 0; i < _connectionTransforms.Count; i++)
