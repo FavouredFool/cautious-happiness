@@ -15,6 +15,8 @@ public class GameProgressionManager : MonoBehaviour
 
     List<Room> _tempRooms;
 
+    RoomManager.RoomType _lastRoom = RoomManager.RoomType.BED;
+
     public void Awake()
     {
         _roomManager = GetComponent<RoomManager>();
@@ -47,8 +49,14 @@ public class GameProgressionManager : MonoBehaviour
             List<RoomManager.RoomType> list = RoomManager.EnumToList<RoomManager.RoomType>();
             list.Remove(RoomManager.RoomType.FLOOR1);
             list.Remove(RoomManager.RoomType.FLOOR2);
+            list.Remove(_lastRoom);
 
-            await DestroyPhase(_roomManager.GetRandomType(list));
+            RoomManager.RoomType roomType = _roomManager.GetRandomType(list);
+            _lastRoom = roomType;
+
+            await DestroyPhase(roomType);
+
+            Room._destroyTime -= 0.5f;
 
             if (!Application.isPlaying) break;
 

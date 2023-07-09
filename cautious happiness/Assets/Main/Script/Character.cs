@@ -42,8 +42,6 @@ public class Character : MonoBehaviour
     public void Update()
     {
         GoalRoom = _scheduleManager.GetGoalRoomFromTValue();
-        Debug.Log("goal: " + GoalRoom);
-        Debug.Log("active: " + LatestRoom);
         MoveCharacter();
     }
 
@@ -112,7 +110,7 @@ public class Character : MonoBehaviour
 
                 Vector2 directFromWaypoint = (neighbourRoom.WalkPoint - latestRoom.WalkPoint).normalized;
 
-                if (Math.Abs(Vector2.Dot(directFromPlayer, directFromWaypoint) - 1) < 0.05f)
+                if (Math.Abs(Vector2.Dot(directFromPlayer, directFromWaypoint) - 1) < 0.001f)
                 {
                     ActiveWaypoint = neighbourRoom.WalkPoint;
                 }
