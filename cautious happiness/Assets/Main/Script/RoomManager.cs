@@ -6,10 +6,12 @@ using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Quaternion = UnityEngine.Quaternion;
 using Random = System.Random;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
+
 
 public class RoomManager : MonoBehaviour
 {
@@ -21,9 +23,10 @@ public class RoomManager : MonoBehaviour
 
     int _nrCount = 0;
 
-    public void CreateRoom()
+    public async Task CreateRoom()
     {
         CreateRoomSequence();
+        await Task.Delay(1500);
     }
 
     public Room GetRoomFromRoomType(RoomType type)
@@ -36,32 +39,20 @@ public class RoomManager : MonoBehaviour
         throw new Exception("room of type missing");
     }
 
-    public async Task DestroyRoom()
+    public Room GetRoomToDestroy(List<Room> remainingRooms)
     {
         Room roomToDestroy = null;
-        Room currentRoom = _character.LatestRoom;
 
         int failSave = 0; 
         while (failSave <= 10000)
         {
             failSave++;
-            roomToDestroy = ActiveRooms[UnityEngine.Random.Range(0, ActiveRooms.Count)];
+            roomToDestroy = remainingRooms[UnityEngine.Random.Range(0, remainingRooms.Count)];
 
             if (roomToDestroy.RoomType == RoomType.BED)
             {
                 continue;
             }
-
-            int amountOfNonNullConnections = 0;
-
-            foreach (RoomConnection connection in roomToDestroy.RoomConnections)
-            {
-                if (connection.ConnectingRoom == null) continue;
-
-                amountOfNonNullConnections++;
-            }
-
-            if (amountOfNonNullConnections > 1) continue;
 
             break;
 
@@ -71,6 +62,13 @@ public class RoomManager : MonoBehaviour
         {
             throw new Exception("escaped endless loop");
         }
+
+        return roomToDestroy;
+    }
+
+    public async Task RemoveRoom(Room roomToDestroy)
+    {
+        await roomToDestroy.Disintegrate();
 
         // Kill dependencies
         foreach (RoomConnection connections in roomToDestroy.RoomConnections)
@@ -83,11 +81,10 @@ public class RoomManager : MonoBehaviour
         }
 
         ActiveRooms.Remove(roomToDestroy);
-        await roomToDestroy.Disintegrate();
 
-        if (roomToDestroy == currentRoom)
+        if (roomToDestroy == _character.LatestRoom)
         {
-            Debug.Log("U LOSE");
+            SceneManager.LoadScene(1, LoadSceneMode.Single);
             return;
         }
 
@@ -360,10 +357,5 @@ public class RoomManager : MonoBehaviour
     public void AddRoom(Room room)
     {
         ActiveRooms.Add(room);
-    }
-
-    public void RemoveRoom(Room room)
-    {
-        ActiveRooms.Remove(room);
     }
 }
